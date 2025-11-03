@@ -1,0 +1,14 @@
+services:
+  ml-core:
+    build: .
+    container_name: ml-core
+    image: ml-core:cuda
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+    volumes:
+      - ../data-assets-pipeline/data:/data
+    ports:
+      - "8002:8002"

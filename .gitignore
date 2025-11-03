@@ -1,0 +1,61 @@
+.cursor/
+# Node / Next.js
+node_modules/
+.next/
+.out/
+*.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+.env
+venv/
+.pytest_cache/
+coverage/
+
+# Env & secrets
+.env
+.env.*
+.env.example
+# !.env.example
+*.key
+*.pem
+*.p12
+service-account.json
+
+# OS/Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Build artifacts / outputs
+/dist/
+/build/
+/tmp/
+outputs/
+
+# Frontend build cache
+.cache/
+yarn.lock
+pnpm-lock.yaml
+package-lock.json
+
+# Misc
+*.bak
+*.tmp
+
+# Local object storage data
+minio-data/
+
+# Uploads (ignore all files, keep placeholder)
+/uploads/**
+!/uploads/.gitkeep
+
+# Assets fonts (do not version large font binaries)
+/backend/assets/fonts/**
+!/backend/assets/fonts/.gitkeep
