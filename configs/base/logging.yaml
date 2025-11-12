@@ -1,0 +1,27 @@
+logging:
+  version: 1
+  disable_existing_loggers: false
+  formatters:
+    structured:
+      format: '%(asctime)s %(name)s %(levelname)s %(message)s'
+      datefmt: '%Y-%m-%dT%H:%M:%S%z'
+  handlers:
+    console:
+      class: logging.StreamHandler
+      formatter: structured
+      level: INFO
+      stream: ext://sys.stdout
+  root:
+    level: INFO
+    handlers:
+      - console
+  loggers:
+    uvicorn.error:
+      level: INFO
+      handlers: [console]
+      propagate: false
+    uvicorn.access:
+      level: INFO
+      handlers: [console]
+      propagate: false
+
