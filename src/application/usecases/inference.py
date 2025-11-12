@@ -7,8 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Mapping, Protocol, Sequence
 
-from ...domain import Signal, ThetaParams
-from ..services import FeatureBuilderService
+from domain import Signal, ThetaParams
 
 
 @dataclass(frozen=True)

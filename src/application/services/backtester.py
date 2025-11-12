@@ -7,7 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Mapping, Protocol, Sequence
 
-from ...domain import ModelArtifact
+from domain import ModelArtifact
 
 
 class BacktestEngineClient(Protocol):

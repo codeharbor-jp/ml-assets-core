@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Mapping
+from typing import Mapping, cast
 
 import yaml
 
@@ -22,7 +22,7 @@ except ImportError as exc:  # pragma: no cover - 実行時に早期検知した�
 def _ensure_mapping(data: object, *, origin: Path) -> Mapping[str, object]:
     if not isinstance(data, Mapping):
         raise ConfigRepositoryError(f"{origin} のトップレベルは Mapping である必要があります。")
-    return data  # type: ignore[return-value]
+    return cast(Mapping[str, object], data)
 
 
 class ConfigRepository:
@@ -97,7 +97,9 @@ def _deep_merge(base: Mapping[str, object], overlay: Mapping[str, object]) -> di
     result = dict(base)
     for key, value in overlay.items():
         if key in result and isinstance(result[key], Mapping) and isinstance(value, Mapping):
-            result[key] = _deep_merge(result[key], value)  # type: ignore[arg-type]
+            base_nested = cast(Mapping[str, object], result[key])
+            overlay_nested = cast(Mapping[str, object], value)
+            result[key] = _deep_merge(base_nested, overlay_nested)
         else:
             result[key] = value
     return result

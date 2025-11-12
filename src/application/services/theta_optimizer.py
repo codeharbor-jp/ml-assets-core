@@ -7,7 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Mapping, Protocol, Sequence
 
-from ...domain import ThetaParams, ThetaRange
+from domain import ThetaParams, ThetaRange
 
 
 class GridSearchStrategy(Protocol):

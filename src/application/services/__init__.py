@@ -2,7 +2,7 @@
 アプリケーションサービスの公開API。
 """
 
-from .backtester import BacktestRequest, BacktestResult, BacktesterService
+from .backtester import BacktestRequest, BacktestResult, BacktesterService, StressScenario
 from .dataset_catalog_builder import (
     DataQualityEvaluator,
     DatasetCatalog,
@@ -23,6 +23,7 @@ __all__ = [
     "BacktesterService",
     "BacktestRequest",
     "BacktestResult",
+    "StressScenario",
     "DatasetCatalogBuilder",
     "DatasetCatalog",
     "DatasetCatalogEntry",

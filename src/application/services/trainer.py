@@ -7,7 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Iterable, Mapping, Protocol, Sequence
 
-from ...domain import CalibrationMetrics, DatasetPartition, ModelArtifact, ThetaParams
+from domain import CalibrationMetrics, DatasetPartition, ModelArtifact, ThetaParams
 
 FeatureVector = Mapping[str, float]
 

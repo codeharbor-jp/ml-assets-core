@@ -7,15 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Mapping, Protocol, Sequence
 
-from ...domain import DatasetPartition, ModelArtifact, ThetaRange
-from ..services import (
-    BacktesterService,
-    FeatureBuilderService,
-    FeatureBuildRequest,
-    ThetaOptimizationService,
-    TrainerService,
-    TrainingRequest,
-)
+from domain import DatasetPartition, ModelArtifact, ThetaRange
 
 
 @dataclass(frozen=True)

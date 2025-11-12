@@ -7,7 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Iterable, Mapping, Protocol, Sequence
 
-from ...domain import DatasetPartition, DataQualityFlag, DataQualitySnapshot
+from domain import DataQualityFlag, DataQualitySnapshot, DatasetPartition
 
 FeatureVector = Mapping[str, float]
 

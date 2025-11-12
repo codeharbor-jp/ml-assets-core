@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Mapping, Protocol, Sequence
 
-from ...domain import DataQualityFlag, DataQualitySnapshot, DatasetPartition
+from domain import DataQualityFlag, DataQualitySnapshot, DatasetPartition
 
 
 class MetadataLoader(Protocol):

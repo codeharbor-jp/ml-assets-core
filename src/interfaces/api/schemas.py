@@ -9,20 +9,19 @@ from typing import Mapping, Sequence
 
 from pydantic import BaseModel
 
-from ...domain import DatasetPartition, ModelArtifact, ThetaParams
-from ...domain.models.signal import Signal
-from ...domain.value_objects import ThetaRange
-from ...application.services import (
+from domain import DatasetPartition, ModelArtifact, ThetaParams
+from domain.models.signal import Signal
+from domain.value_objects import ThetaRange
+from application.services import (
     BacktestRequest,
     BacktestResult,
     StressScenario,
     ThetaOptimizationPlan,
-    ThetaOptimizationRequest,
     ThetaOptimizationResult,
     TrainingArtifact,
     TrainingResult,
 )
-from ...application.usecases import InferenceRequest, InferenceResponse, OpsCommand, OpsResponse, PublishResponse
+from application.usecases import InferenceRequest, InferenceResponse, OpsCommand, OpsResponse, PublishResponse
 
 
 class DatasetPartitionSchema(BaseModel):

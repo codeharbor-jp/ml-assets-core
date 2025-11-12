@@ -17,14 +17,21 @@ from .interfaces import (
     ThetaOptimizationResult,
     ThetaOptimizationService,
 )
+from .labeling import LabelingConfig, RuleBasedLabelingService
+from .position_sizing import PositionSizingConfig, ProportionalPositionSizingService
+from .risk import RiskConfig, RuleBasedRiskAssessmentService
 
 __all__ = [
     "LabelingInput",
     "LabelingOutput",
     "LabelingService",
+    "RuleBasedLabelingService",
+    "LabelingConfig",
     "RiskAssessmentService",
     "RiskAssessmentRequest",
     "RiskAssessmentResult",
+    "RuleBasedRiskAssessmentService",
+    "RiskConfig",
     "ThetaOptimizationService",
     "ThetaOptimizationRequest",
     "ThetaOptimizationResult",
@@ -32,5 +39,7 @@ __all__ = [
     "SignalAssemblyRequest",
     "PositionSizingService",
     "PositionSizingRequest",
+    "ProportionalPositionSizingService",
+    "PositionSizingConfig",
 ]
 

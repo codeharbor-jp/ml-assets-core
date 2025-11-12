@@ -7,7 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Mapping, Protocol
 
-from ...domain import ModelArtifact, ThetaParams
+from domain import ModelArtifact, ThetaParams
 
 
 @dataclass(frozen=True)

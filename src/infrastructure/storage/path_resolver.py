@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Mapping
+from typing import Mapping, cast
 
 from ..configs import ConfigRepository
 
@@ -35,5 +35,5 @@ class StoragePathResolver:
 
     def _load_storage_config(self) -> Mapping[str, object]:
         data = self.config_repository.load("storage", environment=self.environment)
-        return data  # type: ignore[return-value]
+        return cast(Mapping[str, object], data)
 
