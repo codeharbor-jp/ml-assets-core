@@ -1,0 +1,4 @@
+config_api:
+  base_url: http://localhost:8001
+  api_token: dev-config-token
+

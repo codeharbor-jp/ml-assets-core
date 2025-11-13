@@ -6,12 +6,19 @@ from __future__ import annotations
 
 from fastapi import APIRouter, FastAPI
 
-from ...application.services import BacktestRequest, ThetaOptimizationRequest, TrainingRequest
-from ...application.usecases import InferenceRequest, PublishRequest
-from .deps import APIContainer
-from .schemas import (
+from application.services import ThetaOptimizationRequest, TrainingRequest
+from application.usecases import InferenceRequest, PublishRequest
+from interfaces.api.deps import APIContainer
+from interfaces.api.schemas import (
     BacktestRequestSchema,
     BacktestResponseSchema,
+    ConfigApplyRequestSchema,
+    ConfigApproveRequestSchema,
+    ConfigMergeRequestSchema,
+    ConfigOperationResponseSchema,
+    ConfigPRRequestSchema,
+    ConfigRollbackRequestSchema,
+    ConfigValidateRequestSchema,
     InferenceRequestSchema,
     InferenceResponseSchema,
     OpsCommandSchema,
@@ -54,13 +61,7 @@ def _create_router() -> APIRouter:
     @router.post("/learning/backtest", response_model=BacktestResponseSchema)
     def run_backtest(payload: BacktestRequestSchema):
         deps = APIContainer.resolve()
-        request = BacktestRequest(
-            model_artifact=payload.model_artifact,
-            params=payload.params,
-            engine_config=payload.engine_config,
-            stress_scenarios=payload.stress_scenarios,
-            metadata=payload.metadata,
-        )
+        request = payload.to_domain()
         result = deps.backtester_service.run(request)
         return BacktestResponseSchema.from_result(result)
 
@@ -104,6 +105,42 @@ def _create_router() -> APIRouter:
         deps = APIContainer.resolve()
         response = deps.ops_usecase.execute(payload.to_domain())
         return OpsResponseSchema.from_response(response)
+
+    @router.post("/configs/validate", response_model=ConfigOperationResponseSchema)
+    def validate_configs(payload: ConfigValidateRequestSchema):
+        deps = APIContainer.resolve()
+        result = deps.config_usecase.validate(payload.to_domain())
+        return ConfigOperationResponseSchema.from_result(result)
+
+    @router.post("/configs/pr", response_model=ConfigOperationResponseSchema)
+    def create_config_pr(payload: ConfigPRRequestSchema):
+        deps = APIContainer.resolve()
+        result = deps.config_usecase.create_pr(payload.to_domain())
+        return ConfigOperationResponseSchema.from_result(result)
+
+    @router.post("/configs/approve", response_model=ConfigOperationResponseSchema)
+    def approve_config_pr(payload: ConfigApproveRequestSchema):
+        deps = APIContainer.resolve()
+        result = deps.config_usecase.approve(payload.to_domain())
+        return ConfigOperationResponseSchema.from_result(result)
+
+    @router.post("/configs/merge", response_model=ConfigOperationResponseSchema)
+    def merge_config_pr(payload: ConfigMergeRequestSchema):
+        deps = APIContainer.resolve()
+        result = deps.config_usecase.merge(payload.to_domain())
+        return ConfigOperationResponseSchema.from_result(result)
+
+    @router.post("/configs/apply", response_model=ConfigOperationResponseSchema)
+    def apply_config(payload: ConfigApplyRequestSchema):
+        deps = APIContainer.resolve()
+        result = deps.config_usecase.apply(payload.to_domain())
+        return ConfigOperationResponseSchema.from_result(result)
+
+    @router.post("/configs/rollback", response_model=ConfigOperationResponseSchema)
+    def rollback_config(payload: ConfigRollbackRequestSchema):
+        deps = APIContainer.resolve()
+        result = deps.config_usecase.rollback(payload.to_domain())
+        return ConfigOperationResponseSchema.from_result(result)
 
     return router
 

@@ -28,7 +28,7 @@ class InferenceResponse:
     """
 
     signals: Sequence[Signal]
-    diagnostics: Mapping[str, float] = field(default_factory=dict)
+    diagnostics: Mapping[str, object] = field(default_factory=dict)
 
 
 class SignalDispatcher(Protocol):

@@ -1,0 +1,4 @@
+database:
+  postgres:
+    dsn: postgresql://mlcore:change-me@prod-postgres:5432/ml_assets_core
+

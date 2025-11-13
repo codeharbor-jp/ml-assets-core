@@ -1,0 +1,4 @@
+messaging:
+  redis:
+    url: redis://prod-redis:6379/0
+

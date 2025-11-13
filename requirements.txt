@@ -7,4 +7,9 @@ pytest
 mypy
 ruff
 types-PyYAML
+prefect==2.20.16
+redis==5.0.1
+fakeredis==2.22.0
+psycopg[binary,pool]==3.1.20
+httpx==0.28.1
 

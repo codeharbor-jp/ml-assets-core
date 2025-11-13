@@ -1,0 +1,4 @@
+database:
+  postgres:
+    dsn: postgresql://mlcore:mlcore@localhost:5432/ml_assets_core
+

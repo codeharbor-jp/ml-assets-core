@@ -1,0 +1,4 @@
+config_api:
+  base_url: https://config-api.ml-core.prod
+  api_token: prod-config-token
+

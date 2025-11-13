@@ -1,0 +1,34 @@
+# Postgres 接続設定
+database:
+  postgres:
+    dsn: postgresql://mlcore:change-me@postgres-host:5432/ml_assets_core
+    pool:
+      min_size: 2
+      max_size: 10
+      timeout_seconds: 5
+    statement_timeout_ms: 30000
+    search_path:
+      - core
+      - audit
+      - public
+    schemas:
+      core: core
+      audit: audit
+
+# Config API クライアント設定
+config_api:
+  base_url: https://config-api.internal
+  api_token: change-me
+  timeout_seconds: 10
+  retries: 3
+  verify_ssl: true
+
+# Slack 通知設定
+notifications:
+  slack:
+    webhook_url: https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXX
+    channel: "#ml-ops"
+    username: "ml-assets-core"
+    timeout_seconds: 5
+    enabled: true
+

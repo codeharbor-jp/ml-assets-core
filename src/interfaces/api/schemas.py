@@ -21,7 +21,20 @@ from application.services import (
     TrainingArtifact,
     TrainingResult,
 )
-from application.usecases import InferenceRequest, InferenceResponse, OpsCommand, OpsResponse, PublishResponse
+from application.usecases import (
+    ConfigApplyRequest,
+    ConfigApproveRequest,
+    ConfigMergeRequest,
+    ConfigOperationResult,
+    ConfigPRRequest,
+    ConfigRollbackRequest,
+    ConfigValidationRequest,
+    InferenceRequest,
+    InferenceResponse,
+    OpsCommand,
+    OpsResponse,
+    PublishResponse,
+)
 
 
 class DatasetPartitionSchema(BaseModel):
@@ -56,7 +69,7 @@ class TrainingRequestSchema(BaseModel):
 class TrainingResponseSchema(BaseModel):
     artifact: TrainingArtifact
     cv_metrics: Mapping[str, float]
-    diagnostics: Mapping[str, float]
+    diagnostics: Mapping[str, str]
 
     @classmethod
     def from_result(cls, result: TrainingResult) -> "TrainingResponseSchema":
@@ -160,7 +173,7 @@ class InferenceRequestSchema(BaseModel):
 
 class InferenceResponseSchema(BaseModel):
     signals: Sequence[Signal]
-    diagnostics: Mapping[str, float]
+    diagnostics: Mapping[str, object]
 
     @classmethod
     def from_result(cls, result: InferenceResponse) -> "InferenceResponseSchema":
@@ -203,8 +216,64 @@ class OpsCommandSchema(BaseModel):
 class OpsResponseSchema(BaseModel):
     status: str
     message: str
+    details: Mapping[str, str] | None = None
 
     @classmethod
     def from_response(cls, response: OpsResponse) -> "OpsResponseSchema":
-        return cls(status=response.status, message=response.message)
+        return cls(status=response.status, message=response.message, details=response.details or None)
+
+
+class ConfigValidateRequestSchema(BaseModel):
+    payload: Mapping[str, object]
+    metadata: Mapping[str, str] = {}
+
+    def to_domain(self) -> ConfigValidationRequest:
+        return ConfigValidationRequest(payload=self.payload, metadata=self.metadata)
+
+
+class ConfigPRRequestSchema(BaseModel):
+    payload: Mapping[str, object]
+    metadata: Mapping[str, str] = {}
+
+    def to_domain(self) -> ConfigPRRequest:
+        return ConfigPRRequest(payload=self.payload, metadata=self.metadata)
+
+
+class ConfigApproveRequestSchema(BaseModel):
+    pr_id: str
+    comment: str | None = None
+
+    def to_domain(self) -> ConfigApproveRequest:
+        return ConfigApproveRequest(pr_id=self.pr_id, comment=self.comment)
+
+
+class ConfigMergeRequestSchema(BaseModel):
+    pr_id: str
+
+    def to_domain(self) -> ConfigMergeRequest:
+        return ConfigMergeRequest(pr_id=self.pr_id)
+
+
+class ConfigApplyRequestSchema(BaseModel):
+    pr_id: str
+
+    def to_domain(self) -> ConfigApplyRequest:
+        return ConfigApplyRequest(pr_id=self.pr_id)
+
+
+class ConfigRollbackRequestSchema(BaseModel):
+    pr_id: str
+    reason: str | None = None
+
+    def to_domain(self) -> ConfigRollbackRequest:
+        return ConfigRollbackRequest(pr_id=self.pr_id, reason=self.reason)
+
+
+class ConfigOperationResponseSchema(BaseModel):
+    action: str
+    payload: Mapping[str, object]
+
+    @classmethod
+    def from_result(cls, result: ConfigOperationResult) -> "ConfigOperationResponseSchema":
+        return cls(action=result.action, payload=result.payload)
 

@@ -1,0 +1,16 @@
+database:
+  postgres:
+    dsn: null  # 各環境の envs/<env> で必ず上書きすること
+    pool:
+      min_size: 1
+      max_size: 5
+      timeout_seconds: 5
+    statement_timeout_ms: 30000
+    search_path:
+      - core
+      - audit
+      - public
+    schemas:
+      core: core
+      audit: audit
+

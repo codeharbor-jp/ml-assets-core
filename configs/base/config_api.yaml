@@ -1,0 +1,7 @@
+config_api:
+  base_url: null  # 各環境で必ず上書きすること
+  api_token: null
+  timeout_seconds: 10
+  retries: 3
+  verify_ssl: true
+

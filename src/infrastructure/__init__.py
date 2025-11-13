@@ -10,6 +10,23 @@ from .configs import (
     SchemaRegistry,
     SchemaValidationError,
 )
+from .configs.config_api_client import (
+    ConfigAPIClient,
+    ConfigAPIError,
+    ConfigAPISettings,
+)
+from .databases import (
+    DatabaseOperationError,
+    PostgresConfig,
+    PostgresConnectionProvider,
+    PostgresPoolConfig,
+)
+from .repositories import (
+    PostgresAuditLogger,
+    PostgresMetricsRepository,
+    PostgresRegistryUpdater,
+)
+from .notifications import SlackConfig, SlackNotifier, SlackWebhookNotifier
 
 __all__ = [
     "ConfigRepository",
@@ -18,5 +35,18 @@ __all__ = [
     "FlowSchemaRegistry",
     "ConfigNotFoundError",
     "SchemaValidationError",
+    "ConfigAPIClient",
+    "ConfigAPISettings",
+    "ConfigAPIError",
+    "DatabaseOperationError",
+    "PostgresConfig",
+    "PostgresPoolConfig",
+    "PostgresConnectionProvider",
+    "PostgresMetricsRepository",
+    "PostgresRegistryUpdater",
+    "PostgresAuditLogger",
+    "SlackConfig",
+    "SlackNotifier",
+    "SlackWebhookNotifier",
 ]
 

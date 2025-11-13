@@ -1,0 +1,4 @@
+config_api:
+  base_url: https://stg-config-api.internal
+  api_token: stg-config-token
+

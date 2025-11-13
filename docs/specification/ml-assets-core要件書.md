@@ -70,7 +70,7 @@
 - メトリクス保存: 学習完了時に `metrics.json`（CV・OOS 指標, calibration metrics, feature importance）を保存し、Analytics API へ連携する。欠測時は採用判定を行わず `retrain_status=blocked` とする。
 
 ### オーケストレーション・ジョブ設計
-- Orchestrator: Prefect 2.x を採用し、`core_retrain_flow`, `core_backtest_flow`, `core_theta_opt_flow`, `core_publish_flow` を定義。`retrain_cron` で `core_retrain_flow` を自動起動し、成功時にバックテスト→θ最適化→採用判定→配布のシリアルチェーンを Prefect の Subflow で管理する。
+- Orchestrator: Prefect 2.x（運用は 2.20 系）を採用し、`core_retrain_flow`, `core_backtest_flow`, `core_theta_opt_flow`, `core_publish_flow` を定義。`retrain_cron` で `core_retrain_flow` を自動起動し、成功時にバックテスト→θ最適化→採用判定→配布のシリアルチェーンを Prefect の Subflow で管理する。
 - フロー構成:
   - `core_retrain_flow`: データカタログ更新→特徴量生成→学習→校正→メトリクス保存
   - `core_backtest_flow`: 最新モデルと `backtest_policy.yaml` を読み込み、BT・ストレスを実行し `bt_summary` を生成
@@ -90,6 +90,9 @@ theta_search_range: { value: { theta1: [0.60,0.85], theta2: [0.20,0.45] } }
 - ENV: `POSTGRES_URL`, `REDIS_URL`, `SERVICE_ENV`, `LOG_LEVEL`, `TZ=UTC`
 - 追加必須 ENV: `TWELVEDATA_API_KEY`, `STORAGE_BACKEND`, `ARCHIVE_PATH`, `SLACK_WEBHOOK_URL`, `PAGERDUTY_INTEGRATION_KEY`（環境に応じ必須）、`SERVICE_ENV` に応じたバリデーションを行い、不足時は起動を拒否する。
 - 設定 YAML 管理: `core_policy.yaml`, `dd_policy.yaml`, `retrain_policy.yaml`, `pipeline_policy.yaml`, `data_retention.yaml`, `analytics_policy.yaml`, `backtest_policy.yaml`, `universe.yaml`, `cost_table.yaml`, `sources.yaml`, `slack_policy.yaml`, `runbook_policy.yaml` を単一の真実として扱う。コード内でフォールバック値を持たないこと。
+- メッセージング設定: `messaging.redis` に `url`, `channels.{inference_requests,inference_signals,ops_events}`, `keys.{ops_flags,worker_heartbeats}`, `timeouts.{subscribe_timeout_seconds,heartbeat_ttl_seconds}` を定義し、環境差分は `configs/envs/<env>/messaging.yaml` で管理する。
+- データベース設定: `database.postgres` に `dsn`, `pool.{min_size,max_size,timeout_seconds}`, `statement_timeout_ms`, `search_path`, `schemas.{core,audit}` を定義し、各環境の `envs/<env>/database.yaml` で `dsn` を必ず上書きする。コード側でフォールバック値を持たず、DSN 未設定の場合は起動を失敗させる。
+- Config API 設定: `config_api` に `base_url`, `api_token`, `timeout_seconds`, `retries`, `verify_ssl` を定義し、`base_url` は `envs/<env>/config_api.yaml` で必ず上書きする。API トークンは Vault 等で管理し、YAML でのダミー値は開発用途に限定する。
 - 観測設定: `observability_policy.yaml` を参照し、Prometheus エンドポイント（`metrics.port`）と通知ブロック（`notifications.slack.block_ref` 等）を統一管理する。data-assets-pipeline のメトリクス公開（`data_watermark_lag_seconds`, `data_bars_written_total`）と連携し、ml-assets-core 側のヘルスチェックでも活用する。
 
 ### 設定管理・ガバナンス

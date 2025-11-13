@@ -3,6 +3,13 @@
 """
 
 from .ops_flags import OpsFlagRepository, OpsFlagSnapshot
+from .redis_backend import (
+    RedisMessagingConfig,
+    RedisOpsFlagRepository,
+    RedisPublisherImpl,
+    RedisSubscriberImpl,
+    write_heartbeat,
+)
 from .redis_channel import RedisChannel, RedisPublisher, RedisSubscriber
 
 __all__ = [
@@ -11,5 +18,10 @@ __all__ = [
     "RedisSubscriber",
     "OpsFlagRepository",
     "OpsFlagSnapshot",
+    "RedisMessagingConfig",
+    "RedisOpsFlagRepository",
+    "RedisPublisherImpl",
+    "RedisSubscriberImpl",
+    "write_heartbeat",
 ]
 

@@ -1,0 +1,14 @@
+messaging:
+  redis:
+    url: redis://localhost:6379/0
+    channels:
+      inference_requests: core:inference:requests
+      inference_signals: core:inference:signals
+      ops_events: core:ops:events
+    keys:
+      ops_flags: core:ops:flags
+      worker_heartbeats: core:workers:heartbeats
+    timeouts:
+      subscribe_timeout_seconds: 5
+      heartbeat_ttl_seconds: 60
+

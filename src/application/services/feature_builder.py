@@ -96,3 +96,131 @@ class FeatureBuilderService(Protocol):
     def build(self, request: FeatureBuildRequest) -> FeatureBuildResult:
         ...
 
+
+class FeatureBuildError(RuntimeError):
+    """特徴量生成に失敗した場合の基底例外。"""
+
+
+class QuarantinedPartitionError(FeatureBuildError):
+    """隔離対象パーティションのため特徴量生成が許可されない。"""
+
+
+class DataQualityThresholdExceededError(FeatureBuildError):
+    """データ品質閾値を超過した場合の例外。"""
+
+    def __init__(self, flag: DataQualityFlag, message: str) -> None:
+        super().__init__(message)
+        self.flag = flag
+
+
+@dataclass(frozen=True)
+class FeatureBuilderConfig:
+    """
+    データ品質に関する閾値と挙動を制御する設定。
+    """
+
+    missing_threshold: float = 0.05
+    outlier_threshold: float = 0.02
+    spike_threshold: float = 0.01
+    allow_warning: bool = True
+    invalidate_on_failure: bool = True
+
+
+class FeatureBuilder:
+    """
+    FeatureCache と FeatureGenerator を組み合わせて特徴量生成を行う実装。
+    """
+
+    def __init__(
+        self,
+        cache: FeatureCache,
+        generator: FeatureGenerator,
+        hasher: FeatureHasher,
+        config: FeatureBuilderConfig | None = None,
+    ) -> None:
+        self._cache = cache
+        self._generator = generator
+        self._hasher = hasher
+        self._config = config or FeatureBuilderConfig()
+
+    def build(self, request: FeatureBuildRequest) -> FeatureBuildResult:
+        dq_flag = self._evaluate_quality(request)
+        if dq_flag == DataQualityFlag.QUARANTINE:
+            self._invalidate_cache(request, reason="partition_quarantined")
+            raise QuarantinedPartitionError(
+                f"Partition {request.partition.symbol} is quarantined and cannot be processed."
+            )
+
+        if not self._is_allowed_flag(dq_flag):
+            self._invalidate_cache(request, reason=f"dq_flag_{dq_flag.value}")
+            raise DataQualityThresholdExceededError(
+                dq_flag,
+                f"Partition {request.partition.symbol} exceeded data quality threshold ({dq_flag.value}).",
+            )
+
+        feature_hash = self._hasher.compute_hash(request.feature_spec, request.preprocessing)
+        schema_hash = self._hasher.compute_hash(request.feature_spec, {})
+
+        cached = False
+        if request.force_rebuild:
+            self._invalidate_cache(request, reason="force_rebuild")
+
+        if not request.force_rebuild and self._cache.exists(partition=request.partition, feature_hash=feature_hash):
+            cached = True
+            feature_iterable = self._cache.load(partition=request.partition, feature_hash=feature_hash)
+        else:
+            feature_iterable = self._generator.generate(
+                partition=request.partition,
+                feature_spec=request.feature_spec,
+                preprocessing=request.preprocessing,
+            )
+
+        features: tuple[FeatureVector, ...] = tuple(feature_iterable)
+
+        if not cached:
+            self._cache.store(
+                partition=request.partition,
+                feature_hash=feature_hash,
+                features=features,
+                schema_hash=schema_hash,
+            )
+
+        metadata = {
+            "feature_hash": feature_hash,
+            "schema_hash": schema_hash,
+            "cached": "true" if cached else "false",
+        }
+
+        return FeatureBuildResult(
+            partition=request.partition,
+            feature_hash=feature_hash,
+            schema_hash=schema_hash,
+            features=features,
+            dq_flag=dq_flag,
+            metadata=metadata,
+        )
+
+    def _evaluate_quality(self, request: FeatureBuildRequest) -> DataQualityFlag:
+        snapshot = request.dq_snapshot
+        cfg = self._config
+        return snapshot.evaluate(
+            missing_threshold=cfg.missing_threshold,
+            outlier_threshold=cfg.outlier_threshold,
+            spike_threshold=cfg.spike_threshold,
+        )
+
+    def _is_allowed_flag(self, flag: DataQualityFlag) -> bool:
+        allowed = {DataQualityFlag.OK}
+        if self._config.allow_warning:
+            allowed.add(DataQualityFlag.WARNING)
+        return flag in allowed
+
+    def _invalidate_cache(self, request: FeatureBuildRequest, *, reason: str) -> None:
+        if not self._config.invalidate_on_failure:
+            return
+        try:
+            self._cache.invalidate(partition=request.partition, reason=reason)
+        except Exception:
+            # キャッシュ無効化で発生した例外はこれ以上伝播させない。
+            pass
+

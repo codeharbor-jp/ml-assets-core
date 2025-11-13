@@ -1,0 +1,8 @@
+notifications:
+  slack:
+    webhook_url: null  # 各環境の envs/<env>/notifications.yaml で必ず上書きすること
+    channel: "#ml-ops"
+    username: "ml-assets-core"
+    timeout_seconds: 5
+    enabled: true
+

@@ -2,37 +2,71 @@
 アプリケーションサービスの公開API。
 """
 
-from .backtester import BacktestRequest, BacktestResult, BacktesterService, StressScenario
+from .backtester import BacktestRequest, BacktestResult, Backtester, BacktesterService, StressScenario
 from .dataset_catalog_builder import (
     DataQualityEvaluator,
     DatasetCatalog,
     DatasetCatalogBuilder,
     DatasetCatalogEntry,
+    DatasetCatalogReport,
     MetadataLoader,
+    ThresholdDataQualityEvaluator,
 )
-from .feature_builder import FeatureBuildRequest, FeatureBuildResult, FeatureBuilderService
+from .feature_builder import (
+    FeatureBuildError,
+    FeatureBuildRequest,
+    FeatureBuildResult,
+    FeatureBuilder,
+    FeatureBuilderConfig,
+    FeatureBuilderService,
+    DataQualityThresholdExceededError,
+    QuarantinedPartitionError,
+)
 from .theta_optimizer import (
     ThetaOptimizationPlan,
     ThetaOptimizationRequest,
     ThetaOptimizationResult,
     ThetaOptimizationService,
+    ThetaOptimizer,
+    ThetaScorer,
 )
-from .trainer import TrainerService, TrainingArtifact, TrainingRequest, TrainingResult
+from .trainer import (
+    ModelArtifactBuilder,
+    ThetaEstimator,
+    Trainer,
+    TrainerService,
+    TrainingArtifact,
+    TrainingRequest,
+    TrainingResult,
+    TimeSeriesCVStrategy,
+)
 
 __all__ = [
     "BacktesterService",
+    "Backtester",
     "BacktestRequest",
     "BacktestResult",
     "StressScenario",
     "DatasetCatalogBuilder",
     "DatasetCatalog",
     "DatasetCatalogEntry",
+    "DatasetCatalogReport",
     "MetadataLoader",
     "DataQualityEvaluator",
+    "ThresholdDataQualityEvaluator",
+    "FeatureBuilder",
     "FeatureBuilderService",
     "FeatureBuildRequest",
     "FeatureBuildResult",
+    "FeatureBuilderConfig",
+    "FeatureBuildError",
+    "QuarantinedPartitionError",
+    "DataQualityThresholdExceededError",
+    "ModelArtifactBuilder",
+    "ThetaEstimator",
+    "TimeSeriesCVStrategy",
     "TrainerService",
+    "Trainer",
     "TrainingRequest",
     "TrainingResult",
     "TrainingArtifact",
@@ -40,5 +74,7 @@ __all__ = [
     "ThetaOptimizationRequest",
     "ThetaOptimizationResult",
     "ThetaOptimizationPlan",
+    "ThetaOptimizer",
+    "ThetaScorer",
 ]
 

@@ -1,0 +1,4 @@
+notifications:
+  slack:
+    webhook_url: https://hooks.slack.com/services/PROD/XXXXXXXX/XXXXXXXXXXXX
+

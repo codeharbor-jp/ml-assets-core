@@ -6,13 +6,19 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ...application import (
+from application import (
     BacktesterService,
     DatasetCatalogBuilder,
     ThetaOptimizationService,
     TrainerService,
 )
-from ...application.usecases import InferenceUseCase, LearningUseCase, OpsUseCase, PublishUseCase
+from application.usecases import (
+    ConfigManagementUseCase,
+    InferenceUseCase,
+    LearningUseCase,
+    OpsUseCase,
+    PublishUseCase,
+)
 
 
 @dataclass
@@ -25,6 +31,7 @@ class ApiDependencies:
     inference_usecase: InferenceUseCase
     publish_usecase: PublishUseCase
     ops_usecase: OpsUseCase
+    config_usecase: ConfigManagementUseCase
     trainer_service: TrainerService
     backtester_service: BacktesterService
     theta_optimizer: ThetaOptimizationService

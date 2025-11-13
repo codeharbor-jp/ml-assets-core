@@ -6,41 +6,41 @@
 - 依存の強い順に着手し、完了時には成果物（PR・ドキュメント・設定差分）をドキュメントへリンクする。
 
 ### 1. ドメインロジック本実装
-- [ ] ラベリング（AI1/AI2/AI3）/ポジションサイズ/リスク判定サービスを実装し、要件書の規則・閾値を網羅する。
-- [ ] ドメインサービスのユニットテストを作成し、代表ケース・境界ケース・エラーパスを検証する。
-- [ ] ドメインイベント発火と監査ペイロードの仕様を確定し、`tests/unit/domain/`にイベント検証テストを整備する。
+- [x] ラベリング（AI1/AI2/AI3）/ポジションサイズ/リスク判定サービスを実装し、要件書の規則・閾値を網羅する。
+- [x] ドメインサービスのユニットテストを作成し、代表ケース・境界ケース・エラーパスを検証する。
+- [x] ドメインイベント発火と監査ペイロードの仕様を確定し、`tests/unit/domain/`にイベント検証テストを整備する。
 
 ### 2. 特徴量生成・データアクセスポイント統合
-- [ ] `FeatureBuilderService` に data-assets-pipeline との連携、特徴量キャッシュ、`feature_schema.json` 整合性検証を実装。
-- [ ] `DatasetCatalogBuilder` に `dataset_index` 出力・`__quarantine.json` ハンドリング・DQレポート生成を追加。
-- [ ] `storage.yaml`/`ml_core_storage.yaml` を作成し、本番・検証環境のストレージパスと権限設計を確定。
+- [x] `FeatureBuilderService` に data-assets-pipeline との連携、特徴量キャッシュ、`feature_schema.json` 整合性検証を実装。
+- [x] `DatasetCatalogBuilder` に `dataset_index` 出力・`__quarantine.json` ハンドリング・DQレポート生成を追加。
+- [x] `storage.yaml`/`ml_core_storage.yaml` を作成し、本番・検証環境のストレージパスと権限設計を確定。
 
 ### 3. 学習・評価パイプライン完成
-- [ ] `TrainerService` に時系列CV・Walk-Forward・キャリブレーション処理を実装し、メトリクス保存・失敗時ハンドリングを追加。
-- [ ] `BacktesterService` に backtest-assets-engine 連携・ストレスシナリオ処理・評価ロジックを実装。
-- [ ] `ThetaOptimizationService` に粗グリッド＋Optuna探索・制約検証・CIガードを実装し、テストで再現性を確認。
-- [ ] Prefect `core_retrain_flow` から学習→BT→θ最適化→採用判定→配布までを通しで動作させ、integration テストを整備。
+- [x] `TrainerService` に時系列CV・Walk-Forward・キャリブレーション処理を実装し、メトリクス保存・失敗時ハンドリングを追加。
+- [x] `BacktesterService` に backtest-assets-engine 連携・ストレスシナリオ処理・評価ロジックを実装。
+- [x] `ThetaOptimizationService` に粗グリッド＋Optuna探索・制約検証・CIガードを実装し、テストで再現性を確認。
+- [x] Prefect `core_retrain_flow` から学習→BT→θ最適化→採用判定→配布までを通しで動作させ、integration テストを整備。
 
 ### 4. 推論・Ops連携の本実装
-- [ ] 推論ワーカー（Redis心拍・β中立ロジック・valid_until 管理）の実装と負荷テストを実施。
-- [ ] FastAPI `/inference`・`/ops` エンドポイントに RBAC・承認フロー・監査ログ記録を実装。
-- [ ] Opsフラグ (`core:ops:flags`) の整合性チェックと CLI/ API/ ワーカー間の競合回避制御を実装。
+- [x] 推論ワーカー（Redis心拍・β中立ロジック・valid_until 管理）の実装と負荷テストを実施。
+- [x] FastAPI `/inference`・`/ops` エンドポイントに RBAC・承認フロー・監査ログ記録を実装。
+- [x] Opsフラグ (`core:ops:flags`) の整合性チェックと CLI/ API/ ワーカー間の競合回避制御を実装。
 
 ### 5. インフラ接続・外部サービス統合
-- [ ] PostgreSQL リポジトリ・Config API クライアント・Redis Gateways を実装し、統合テストで接続確認を行う。
-- [ ] TwelveData/Secondary プロバイダを実装し、`sources.yaml` の優先度・フェイルオーバを反映させる。
-- [ ] IaC（Terraform/Helm など）で Prefect Work Pool・Redis・PostgreSQL の構築手順を docs/ と deployments/ に記載。
+- [x] PostgreSQL リポジトリ・Config API クライアント・Redis Gateways を実装し、統合テストで接続確認を行う。
+- [x] TwelveData/Secondary プロバイダを実装し、`sources.yaml` の優先度・フェイルオーバを反映させる。
+- [x] IaC（Terraform/Helm など）で Prefect Work Pool・Redis・PostgreSQL の構築手順を docs/ と deployments/ に記載。
 
 ### 6. 観測性・セキュリティ・ガバナンス
-- [ ] Prometheus メトリクス・OpenTelemetry トレースを本実装し、SLO/アラート設計を docs/ にまとめる。
-- [ ] Slack/PagerDuty 通知テンプレートを整備し、重大度別ルーティングを Prefect/OPS から呼び出せるようにする。
-- [ ] モデル署名検証・設定変更ワークフロー・監査ログ WORM 保存を実装し、セキュリティレビューを実施。
-- [ ] API スキーマ・Runbook・DR 手順を整備し、ドキュメントレビューと承認フローを実施。
+- [x] Prometheus メトリクス・OpenTelemetry トレースを本実装し、SLO/アラート設計を docs/ にまとめる。
+- [x] Slack/PagerDuty 通知テンプレートを整備し、重大度別ルーティングを Prefect/OPS から呼び出せるようにする。
+- [x] モデル署名検証・設定変更ワークフロー・監査ログ WORM 保存を実装し、セキュリティレビューを実施。
+- [x] API スキーマ・Runbook・DR 手順を整備し、ドキュメントレビューと承認フローを実施。
 
 ### 7. E2E テストとリリース準備
-- [ ] データ取得→学習→バックテスト→θ更新→推論→Redis配信の E2E シナリオテストを作成。
-- [ ] Great Expectations または同等ツールでデータ品質チェックを自動化し、CI に統合。
-- [ ] リリース判定基準（メトリクス/監査ログ/カバレッジ/SLO）を明文化し、ローンチチェックリストを作成。
+- [x] データ取得→学習→バックテスト→θ更新→推論→Redis配信の E2E シナリオテストを作成。
+- [x] Great Expectations または同等ツールでデータ品質チェックを自動化し、CI に統合。
+- [x] リリース判定基準（メトリクス/監査ログ/カバレッジ/SLO）を明文化し、ローンチチェックリストを作成。
 
 ---
 
