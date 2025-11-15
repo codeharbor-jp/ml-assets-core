@@ -4,8 +4,18 @@ core_policy:
   theta_search_range:
     theta1: [0.6, 0.85]
     theta2: [0.2, 0.45]
+    max_delta: 0.1
   theta_constraints:
     max_delta: 0.1
     baseline_theta1: 0.7
     baseline_theta2: 0.3
+  theta_plan:
+    grid_steps:
+      theta1: 4
+      theta2: 4
+    optuna_trials: 25
+    optuna_timeout_seconds: 60
+    constraints: {}
+  theta_scoring:
+    max_drawdown_target: 0.12
 

@@ -1,12 +1,19 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Mapping, Sequence
 
 from fastapi import HTTPException
 
 from application import AnalyticsService
-from application.services import BacktestRequest, BacktestResult, BacktesterService, DatasetCatalogBuilder, ThetaOptimizationResult
+from application.services import (
+    BacktestRequest,
+    BacktestResult,
+    BacktesterService,
+    DatasetCatalogBuilder,
+    ThetaOptimizationResult,
+)
 from application.services.analytics import AnalyticsRepository, MetricsPayload, MetricsQuery
 from application.services.theta_optimizer import ThetaOptimizationRequest, ThetaOptimizationService
 from application.services.trainer import TrainerService, TrainingRequest, TrainingResult
@@ -35,6 +42,7 @@ from application.usecases import (
 from domain import DatasetPartition, Signal, SignalLeg, TradeSide
 from interfaces.api import create_api_app
 from interfaces.api.deps import ApiDependencies, configure_dependencies
+from runtime.dependencies import build_backtest_components, build_theta_components
 
 
 class _UnimplementedLearningUseCase(LearningUseCase):
@@ -135,6 +143,23 @@ class _StubAnalyticsService(AnalyticsService):
 
 def _configure_dependencies() -> None:
     analytics_service = _StubAnalyticsService()
+    logger = logging.getLogger("interfaces.api.server")
+
+    backtester_service: BacktesterService = _UnimplementedBacktesterService()
+    theta_optimizer: ThetaOptimizationService = _UnimplementedThetaOptimizer()
+
+    try:
+        backtest_components = build_backtest_components()
+        backtester_service = backtest_components.service
+    except Exception as exc:  # pragma: no cover - 環境依存
+        logger.warning("Failed to initialize BacktesterService: %s", exc, exc_info=True)
+
+    try:
+        theta_components = build_theta_components()
+        theta_optimizer = theta_components.service
+    except Exception as exc:  # pragma: no cover - 環境依存
+        logger.warning("Failed to initialize ThetaOptimizationService: %s", exc, exc_info=True)
+
     deps = ApiDependencies(
         learning_usecase=_UnimplementedLearningUseCase(),
         inference_usecase=_StubInferenceUseCase(),
@@ -142,8 +167,8 @@ def _configure_dependencies() -> None:
         ops_usecase=_UnimplementedOpsUseCase(),
         config_usecase=_UnimplementedConfigUseCase(),
         trainer_service=_UnimplementedTrainerService(),
-        backtester_service=_UnimplementedBacktesterService(),
-        theta_optimizer=_UnimplementedThetaOptimizer(),
+        backtester_service=backtester_service,
+        theta_optimizer=theta_optimizer,
         catalog_builder=_StubDatasetCatalogBuilder(),
         analytics_service=analytics_service,
     )

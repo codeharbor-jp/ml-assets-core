@@ -11,7 +11,7 @@ from typing import Callable, Mapping, Protocol, Sequence
 
 from application.services.feature_builder import FeatureBuilder, FeatureBuildRequest, FeatureBuildResult
 from application.services.trainer import TrainerService, TrainingRequest
-from domain import DatasetPartition, ModelArtifact, ThetaRange
+from domain import DatasetPartition, ModelArtifact, ThetaParams, ThetaRange
 from domain.services import LabelingInput, LabelingOutput, LabelingService
 from domain.value_objects import DataQualitySnapshot
 
@@ -37,7 +37,7 @@ class LearningResponse:
 
     model_artifact: ModelArtifact
     backtest_metrics: Mapping[str, float]
-    theta_params: Mapping[str, float]
+    theta_params: ThetaParams
     diagnostics: Mapping[str, float] = field(default_factory=dict)
 
 
@@ -119,13 +119,12 @@ class LearningService(LearningUseCase):
         diagnostics = self._extract_numeric_diagnostics(training_result.diagnostics)
         diagnostics["feature_count"] = float(len(features))
 
-        theta = training_result.artifact.theta_params
-        theta_payload = {"theta1": float(theta.theta1), "theta2": float(theta.theta2)}
+        theta_params = training_result.artifact.theta_params
 
         return LearningResponse(
             model_artifact=training_result.artifact.artifact,
             backtest_metrics=dict(training_result.cv_metrics),
-            theta_params=theta_payload,
+            theta_params=theta_params,
             diagnostics=diagnostics,
         )
 

@@ -95,6 +95,9 @@ theta_search_range: { value: { theta1: [0.60,0.85], theta2: [0.20,0.45] } }
 - Config API 設定: `config_api` に `base_url`, `api_token`, `timeout_seconds`, `retries`, `verify_ssl` を定義し、`base_url` は `envs/<env>/config_api.yaml` で必ず上書きする。API トークンは Vault 等で管理し、YAML でのダミー値は開発用途に限定する。
 - 観測設定: `observability_policy.yaml` を参照し、Prometheus エンドポイント（`metrics.port`）と通知ブロック（`notifications.slack.block_ref` 等）を統一管理する。data-assets-pipeline のメトリクス公開（`data_watermark_lag_seconds`, `data_bars_written_total`）と連携し、ml-assets-core 側のヘルスチェックでも活用する。
 - `metrics.yaml` で `provider: prometheus` を指定し、`host`/`port`、`histogram_buckets`、`default_labels`、`otel` エクスポータ設定（`endpoint`, `timeout_seconds`, `service_name` 等）を管理する。`inference_latency_ms`, `feature_build_duration_seconds`, `core_retrain_duration_seconds`, `core_backtest_duration_seconds`, `core_theta_trials` などのメトリクスを `/metrics` で公開し、OTLP でトレースを収集する。
+- `backtest_engine.yaml` に backtest-assets-engine の接続情報（`base_url`, `api_token`, `timeout_seconds`, `verify_ssl`, `max_retries`）を定義する。環境ごとの差分は `configs/envs/<env>/backtest_engine.yaml` で上書きし、コード側にフォールバック値を持たない。
+- `backtest_policy.yaml` でエントリ/イグジットルール、コスト、ストレス設定、評価閾値、実行期間（`dataset_root`, `period`, `cost_table_path`, `universe_path`）を管理し、BacktesterService/Prefect フローの唯一の参照源とする。
+- `core_policy.yaml` で θ 初期値・探索レンジ（`theta_search_range`）、Δθ 制約（`theta_constraints`）、Optuna 設定（`theta_plan`）、スコアリング閾値（`theta_scoring`）を定義し、ThetaOptimizationService の挙動を統一する。
 
 ### 設定管理・ガバナンス
 - ワークフロー: UI → Git → PR → 承認 → 適用 → 監査（`draft → pr_created → approved → merged → applied`）。高リスク変更は approver 2 名を要求。

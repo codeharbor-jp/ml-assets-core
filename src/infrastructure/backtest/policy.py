@@ -80,6 +80,12 @@ class BacktestPolicy:
 
     @staticmethod
     def from_mapping(mapping: Mapping[str, object]) -> "BacktestPolicy":
+        if "backtest_policy" in mapping:
+            nested = mapping["backtest_policy"]
+            if not isinstance(nested, Mapping):
+                raise ValueError("backtest_policy セクションが不正です。")
+            mapping = nested
+
         entry_rule = dict(_require_mapping(_require_mapping(mapping, "entry_rule"), "value"))
         exit_rule = dict(_require_mapping(_require_mapping(mapping, "exit_rule"), "value"))
         costs = dict(_require_mapping(_require_mapping(mapping, "costs"), "value"))

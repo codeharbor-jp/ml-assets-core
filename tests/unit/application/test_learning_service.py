@@ -110,7 +110,7 @@ def test_learning_service_runs_training_pipeline(storage_roots: StoragePathResol
 
     assert response.model_artifact.model_version.startswith("model_")
     assert response.model_artifact.ai1_path.exists()
-    assert response.theta_params["theta1"] > 0
+    assert response.theta_params.theta1 > 0
     assert response.backtest_metrics
 
     stored = json.loads(response.model_artifact.ai1_path.read_text(encoding="utf-8"))

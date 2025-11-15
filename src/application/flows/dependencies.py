@@ -7,6 +7,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ..services import BacktesterService, ThetaOptimizationService
+from infrastructure.backtest import BacktestRequestFactory
+from infrastructure.theta import ThetaRequestFactory
 from ..usecases import InferenceUseCase, LearningUseCase, OpsUseCase, PublishUseCase
 
 
@@ -22,6 +24,8 @@ class FlowDependencies:
     ops_usecase: OpsUseCase
     backtester_service: BacktesterService
     theta_optimizer: ThetaOptimizationService
+    backtest_request_factory: BacktestRequestFactory | None = None
+    theta_request_factory: ThetaRequestFactory | None = None
 
 
 _dependencies: FlowDependencies | None = None

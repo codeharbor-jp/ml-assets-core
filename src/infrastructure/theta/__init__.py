@@ -4,6 +4,7 @@
 
 from .constraints import DeltaConstraintEvaluator
 from .scorers import HistoricalThetaScorer
+from .request_factory import ThetaRequestFactory
 from .strategies import RandomOptunaStrategy, UniformGridSearchStrategy
 
 __all__ = [
@@ -11,5 +12,6 @@ __all__ = [
     "HistoricalThetaScorer",
     "RandomOptunaStrategy",
     "UniformGridSearchStrategy",
+    "ThetaRequestFactory",
 ]
 

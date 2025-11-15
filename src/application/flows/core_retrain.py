@@ -5,11 +5,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Mapping
+from typing import Mapping, Sequence
 
 from prefect import flow, get_run_logger
 
-from ..services import BacktestRequest, BacktestResult, ThetaOptimizationRequest, ThetaOptimizationResult
+from domain import ThetaParams
+from ..services import (
+    BacktestRequest,
+    BacktestResult,
+    ThetaOptimizationRequest,
+    ThetaOptimizationResult,
+)
 from ..usecases import LearningRequest, LearningResponse, PublishRequest, PublishResponse
 from .core_backtest import core_backtest_flow
 from .core_publish import core_publish_flow
@@ -56,11 +62,24 @@ def core_retrain_flow(
     logger.info("Learning completed for model_version=%s", learning_response.model_artifact.model_version)
 
     backtest_result: BacktestResult | None = None
+    if backtest_request is None and deps.backtest_request_factory is not None:
+        backtest_request = deps.backtest_request_factory.build(
+            artifact=learning_response.model_artifact,
+            theta_params=learning_response.theta_params,
+            metadata=flow_metadata or {},
+        )
     if backtest_request is not None:
         logger.info("Running nested core_backtest_flow")
         backtest_result = core_backtest_flow(backtest_request)
 
     theta_result: ThetaOptimizationResult | None = None
+    if theta_request is None and deps.theta_request_factory is not None:
+        score_history = _build_theta_history(backtest_result, learning_response.theta_params)
+        theta_request = deps.theta_request_factory.build(
+            initial_params=learning_response.theta_params,
+            score_history=score_history,
+            metadata=flow_metadata or {},
+        )
     if theta_request is not None:
         logger.info("Running nested core_theta_opt_flow")
         theta_result = core_theta_opt_flow(theta_request)
@@ -80,4 +99,22 @@ def core_retrain_flow(
 
     logger.info("core_retrain_flow completed")
     return aggregate
+
+
+def _build_theta_history(
+    backtest_result: BacktestResult | None,
+    theta_params: ThetaParams,
+) -> Sequence[Mapping[str, float]]:
+    if backtest_result is None:
+        return ()
+    history_entry: dict[str, float] = {
+        "theta1": theta_params.theta1,
+        "theta2": theta_params.theta2,
+    }
+    for key, value in backtest_result.summary_metrics.items():
+        try:
+            history_entry[key] = float(value)
+        except (TypeError, ValueError):
+            continue
+    return (history_entry,)
 

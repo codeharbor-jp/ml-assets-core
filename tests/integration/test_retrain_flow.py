@@ -82,7 +82,13 @@ class DummyLearningUseCase(LearningUseCase):
         return LearningResponse(
             model_artifact=artifact,
             backtest_metrics={"sharpe": 1.4},
-            theta_params={"theta1": 0.7, "theta2": 0.3},
+            theta_params=ThetaParams(
+                theta1=0.7,
+                theta2=0.3,
+                updated_at=datetime.now(timezone.utc),
+                updated_by="tests",
+                source_model_version=artifact.model_version,
+            ),
             diagnostics={"duration": 12.0},
         )
 
