@@ -4,7 +4,7 @@
 
 from .learning import LearningRequest, LearningResponse, LearningUseCase
 from .inference import InferenceRequest, InferenceResponse, InferenceUseCase
-from .publish import PublishRequest, PublishResponse, PublishUseCase
+from .publish import ModelPublishService, PublishRequest, PublishResponse, PublishUseCase
 from .ops import OpsCommand, OpsResponse, OpsUseCase
 from .configs import (
     ConfigApplyRequest,
@@ -27,6 +27,7 @@ __all__ = [
     "PublishUseCase",
     "PublishRequest",
     "PublishResponse",
+    "ModelPublishService",
     "OpsUseCase",
     "OpsCommand",
     "OpsResponse",
