@@ -2,7 +2,7 @@
 CLI サブコマンドの公開API。
 """
 
-from . import diagnostics, flow, ops
+from . import data, diagnostics, flow, ops
 
-__all__ = ["flow", "ops", "diagnostics"]
+__all__ = ["data", "flow", "ops", "diagnostics"]
 

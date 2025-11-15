@@ -1,0 +1,20 @@
+training:
+  cv:
+    folds: 3
+    min_train_size: 96
+    holdout_size: 24
+  ai1_params:
+    learning_rate: 0.1
+    epochs: 200
+    l2: 0.0001
+  ai2_params:
+    learning_rate: 0.1
+    epochs: 200
+    l2: 0.0001
+  feature_builder:
+    missing_threshold: 0.05
+    outlier_threshold: 0.02
+    spike_threshold: 0.01
+    allow_warning: true
+    invalidate_on_failure: true
+

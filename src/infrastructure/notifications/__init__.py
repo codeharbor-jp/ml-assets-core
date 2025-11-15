@@ -3,6 +3,7 @@
 """
 
 from .pagerduty import PagerDutyConfig, PagerDutyNotificationError, PagerDutyNotifier
+from .publish import CompositePublishNotificationService, NoopNotificationService
 from .slack import SlackConfig, SlackNotifier, SlackWebhookNotifier
 
 __all__ = [
@@ -12,5 +13,7 @@ __all__ = [
     "PagerDutyConfig",
     "PagerDutyNotifier",
     "PagerDutyNotificationError",
+    "CompositePublishNotificationService",
+    "NoopNotificationService",
 ]
 

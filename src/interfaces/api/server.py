@@ -11,12 +11,16 @@ from application.services import (
     BacktestRequest,
     BacktestResult,
     BacktesterService,
-    DatasetCatalogBuilder,
     ThetaOptimizationResult,
 )
 from application.services.analytics import AnalyticsRepository, MetricsPayload, MetricsQuery
 from application.services.theta_optimizer import ThetaOptimizationRequest, ThetaOptimizationService
 from application.services.trainer import TrainerService, TrainingRequest, TrainingResult
+from application.services.dataset_catalog_builder import (
+    DatasetCatalogBuilder,
+    DataQualityEvaluator,
+    MetadataLoader,
+)
 from application.usecases import (
     ConfigApplyRequest,
     ConfigApproveRequest,
@@ -39,10 +43,18 @@ from application.usecases import (
     PublishResponse,
     PublishUseCase,
 )
-from domain import DatasetPartition, Signal, SignalLeg, TradeSide
+from domain import DataQualitySnapshot, DatasetPartition, Signal, SignalLeg, TradeSide
 from interfaces.api import create_api_app
 from interfaces.api.deps import ApiDependencies, configure_dependencies
-from runtime.dependencies import build_backtest_components, build_theta_components
+from runtime.dependencies import (
+    build_analytics_service,
+    build_backtest_components,
+    build_config_management_service,
+    build_learning_components,
+    build_ops_usecase,
+    build_publish_components,
+    build_theta_components,
+)
 
 
 class _UnimplementedLearningUseCase(LearningUseCase):
@@ -115,8 +127,19 @@ class _UnimplementedThetaOptimizer(ThetaOptimizationService):
 
 
 class _StubDatasetCatalogBuilder(DatasetCatalogBuilder):
-    def __init__(self) -> None:  # type: ignore[super-init-not-called]
-        pass
+    class _MetadataLoader(MetadataLoader):
+        def load_snapshot(self, partition: DatasetPartition) -> DataQualitySnapshot:  # noqa: ARG002
+            raise HTTPException(status_code=501, detail="dataset_catalog_builder is not available in the dev server.")
+
+        def load_metadata(self, partition: DatasetPartition) -> Mapping[str, str]:  # noqa: ARG002
+            raise HTTPException(status_code=501, detail="dataset_catalog_builder is not available in the dev server.")
+
+    class _DQEvaluator(DataQualityEvaluator):
+        def evaluate(self, snapshot: DataQualitySnapshot, thresholds: Mapping[str, float]):  # noqa: ARG002
+            raise HTTPException(status_code=501, detail="dataset_catalog_builder is not available in the dev server.")
+
+    def __init__(self) -> None:
+        super().__init__(metadata_loader=self._MetadataLoader(), dq_evaluator=self._DQEvaluator())
 
     def build(self, partitions: Sequence[DatasetPartition], *, thresholds: Mapping[str, float]):  # noqa: ARG002
         raise HTTPException(status_code=501, detail="dataset_catalog_builder is not available in the dev server.")
@@ -142,11 +165,44 @@ class _StubAnalyticsService(AnalyticsService):
 
 
 def _configure_dependencies() -> None:
-    analytics_service = _StubAnalyticsService()
     logger = logging.getLogger("interfaces.api.server")
 
+    analytics_service: AnalyticsService = _StubAnalyticsService()
+    learning_usecase: LearningUseCase = _UnimplementedLearningUseCase()
+    trainer_service: TrainerService = _UnimplementedTrainerService()
+    publish_usecase: PublishUseCase = _UnimplementedPublishUseCase()
+    ops_usecase: OpsUseCase = _UnimplementedOpsUseCase()
+    config_usecase: ConfigManagementUseCase = _UnimplementedConfigUseCase()
     backtester_service: BacktesterService = _UnimplementedBacktesterService()
     theta_optimizer: ThetaOptimizationService = _UnimplementedThetaOptimizer()
+
+    try:
+        analytics_service = build_analytics_service()
+    except Exception as exc:  # pragma: no cover - 環境依存
+        logger.warning("Failed to initialize AnalyticsService: %s", exc, exc_info=True)
+
+    try:
+        learning_components = build_learning_components()
+        learning_usecase = learning_components.usecase
+        trainer_service = learning_components.trainer
+    except Exception as exc:  # pragma: no cover - 環境依存
+        logger.warning("Failed to initialize Learning components: %s", exc, exc_info=True)
+
+    try:
+        publish_components = build_publish_components()
+        publish_usecase = publish_components.service
+    except Exception as exc:  # pragma: no cover - 環境依存
+        logger.warning("Failed to initialize PublishUseCase: %s", exc, exc_info=True)
+
+    try:
+        ops_usecase = build_ops_usecase()
+    except Exception as exc:  # pragma: no cover - 環境依存
+        logger.warning("Failed to initialize OpsUseCase: %s", exc, exc_info=True)
+
+    try:
+        config_usecase = build_config_management_service()
+    except Exception as exc:  # pragma: no cover - 環境依存
+        logger.warning("Failed to initialize ConfigManagementUseCase: %s", exc, exc_info=True)
 
     try:
         backtest_components = build_backtest_components()
@@ -161,12 +217,12 @@ def _configure_dependencies() -> None:
         logger.warning("Failed to initialize ThetaOptimizationService: %s", exc, exc_info=True)
 
     deps = ApiDependencies(
-        learning_usecase=_UnimplementedLearningUseCase(),
+        learning_usecase=learning_usecase,
         inference_usecase=_StubInferenceUseCase(),
-        publish_usecase=_UnimplementedPublishUseCase(),
-        ops_usecase=_UnimplementedOpsUseCase(),
-        config_usecase=_UnimplementedConfigUseCase(),
-        trainer_service=_UnimplementedTrainerService(),
+        publish_usecase=publish_usecase,
+        ops_usecase=ops_usecase,
+        config_usecase=config_usecase,
+        trainer_service=trainer_service,
         backtester_service=backtester_service,
         theta_optimizer=theta_optimizer,
         catalog_builder=_StubDatasetCatalogBuilder(),

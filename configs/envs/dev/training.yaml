@@ -1,0 +1,7 @@
+training:
+  cv:
+    min_train_size: 24
+    holdout_size: 8
+  feature_builder:
+    allow_warning: true
+

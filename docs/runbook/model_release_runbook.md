@@ -24,7 +24,23 @@
     )
     ```
 2. `checksums.json` が生成されたことを確認し、`distributor.verify` でハッシュ検証を実施。
-3. `PostgresRegistryUpdater` で `core.model_registry` を更新し、新バージョンを `deployed` ステータスへ変更。
+3. Prefect / CLI からの自動化時は `runtime.build_publish_components()` を利用し、`ModelPublishService` と `PostgresRegistryUpdater` を同時に取得する:
+    ```python
+    from application.usecases import PublishRequest
+    from runtime import build_publish_components
+
+    components = build_publish_components(environment="prod")
+    publish_service = components.service
+    response = publish_service.execute(
+        PublishRequest(
+            artifact=model_artifact,
+            theta_params=theta_params,
+            metadata={"trigger": "prefect-flow"},
+        )
+    )
+    print("audit_record", response.audit_record_id)
+    ```
+4. `PostgresRegistryUpdater` で `core.model_registry` を更新し、新バージョンを `deployed` ステータスへ変更。
 
 ### 3. Prefect フロー更新
 - Terraform で Work Pool を管理している場合: `terraform apply -var-file=envs/prod.tfvars` を実行。
