@@ -14,7 +14,7 @@
 | 3 | Prefect ラン (2.20 系) と連携できているか | Prefect UI で `core_retrain_flow` が成功しているかを確認 | 作業ログをスクリーンショット保存 |
 | 4 | Slack 通知が受信できるか | `pytest tests/integration/test_external_integrations.py -k slack` | 通知先にメッセージが届くこと |
 | 5 | Config API 連携の健全性 | `pytest tests/integration/test_external_integrations.py -k config` | 成功レスポンスを確認 |
-| 6 | Release gate 自動チェック | `python scripts/checks/run_release_gate.py` | lint / mypy / pytest を一括実行 |
+| 6 | Release gate 自動チェック | `python scripts/checks/run_release_gate.py` | lint / mypy / データ品質 / pytest / E2E を一括実行 |
 | 7 | データ品質メトリクス確認 | Prefect フロー実行後に `/api/v1/reports/dq` (将来実装予定) を確認 | 実装前は manual チェック |
 
 ## 2. Security
@@ -35,7 +35,8 @@
 | 2 | 外部サービスも含む統合 | `pytest tests/integration/test_external_integrations.py` | Config API / Slack / Ops をモック |
 | 3 | 手動シナリオ (運用系) | 1. Config API で PR 作成 → Approve → Apply<br>2. OPS API で halt → resume | Slack 通知と Redis 更新を確認 |
 | 4 | データセットを使った学習ジョブ | `python scripts/manual_tests/run_retrain_smoke.py --env stg` (将来追加) | 実データ環境での smoke チェック |
-| 5 | 回帰テスト一式 | `docker compose run --rm ml-core pytest` | CI と同じコマンドで実施 |
+| 5 | E2E パイプライン自動テスト | `pytest tests/integration/test_end_to_end_pipeline.py` | データ取得→特徴量→リスク→Analytics まで検証 |
+| 6 | 回帰テスト一式 | `docker compose run --rm ml-core pytest` | CI と同じコマンドで実施 |
 
 ## 4. リリース Go/No-Go 判定
 

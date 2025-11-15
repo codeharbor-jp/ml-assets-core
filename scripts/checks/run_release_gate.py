@@ -22,10 +22,28 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
+DATASET_PATH = "tests/fixtures/data_quality/sample_canonical.json"
+EXPECTATIONS_PATH = "tests/fixtures/data_quality/expectations.yaml"
+E2E_TEST_PATH = "tests/integration/test_end_to_end_pipeline.py"
+
 COMMANDS = [
     ["docker", "compose", "run", "--rm", "ml-core", "ruff", "check", "."],
     ["docker", "compose", "run", "--rm", "ml-core", "mypy", "src"],
+    [
+        "docker",
+        "compose",
+        "run",
+        "--rm",
+        "ml-core",
+        "python",
+        "scripts/quality/run_data_quality_checks.py",
+        "--dataset",
+        DATASET_PATH,
+        "--expectations",
+        EXPECTATIONS_PATH,
+    ],
     ["docker", "compose", "run", "--rm", "ml-core", "pytest"],
+    ["docker", "compose", "run", "--rm", "ml-core", "pytest", E2E_TEST_PATH],
 ]
 
 
