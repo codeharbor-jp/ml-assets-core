@@ -2,6 +2,7 @@
 インフラ層のパッケージ初期化。
 """
 
+from .cache import RedisAnalyticsCache
 from .configs import (
     ConfigNotFoundError,
     ConfigRepository,
@@ -10,25 +11,13 @@ from .configs import (
     SchemaRegistry,
     SchemaValidationError,
 )
-from .configs.config_api_client import (
-    ConfigAPIClient,
-    ConfigAPIError,
-    ConfigAPISettings,
-)
-from .databases import (
-    DatabaseOperationError,
-    PostgresConfig,
-    PostgresConnectionProvider,
-    PostgresPoolConfig,
-)
-from .repositories import (
-    PostgresAuditLogger,
-    PostgresMetricsRepository,
-    PostgresRegistryUpdater,
-)
+from .configs.config_api_client import ConfigAPIClient, ConfigAPIError, ConfigAPISettings
+from .databases import DatabaseOperationError, PostgresConfig, PostgresConnectionProvider, PostgresPoolConfig
 from .features.data_assets import DataAssetsFeatureCache, DataAssetsFeatureGenerator
 from .features.hasher import JsonFeatureHasher
 from .notifications import SlackConfig, SlackNotifier, SlackWebhookNotifier
+from .repositories import PostgresAuditLogger, PostgresMetricsRepository, PostgresRegistryUpdater
+from .repositories.analytics import PostgresAnalyticsRepository
 from .storage.filesystem import LocalFileSystemStorageClient
 from .storage.json_parquet import JsonParquetReader, JsonParquetWriter
 from .storage.path_resolver import StoragePathResolver
@@ -50,6 +39,7 @@ __all__ = [
     "PostgresMetricsRepository",
     "PostgresRegistryUpdater",
     "PostgresAuditLogger",
+    "PostgresAnalyticsRepository",
     "SlackConfig",
     "SlackNotifier",
     "SlackWebhookNotifier",
@@ -60,5 +50,6 @@ __all__ = [
     "LocalFileSystemStorageClient",
     "JsonParquetReader",
     "JsonParquetWriter",
+    "RedisAnalyticsCache",
 ]
 

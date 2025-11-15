@@ -4,9 +4,11 @@ FastAPI アプリケーションのルート設定。
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from fastapi import APIRouter, FastAPI
 
-from application.services import ThetaOptimizationRequest, TrainingRequest
+from application.services import MetricsQuery, ThetaOptimizationRequest, TrainingRequest
 from application.usecases import InferenceRequest, PublishRequest
 from interfaces.api.deps import APIContainer
 from interfaces.api.schemas import (
@@ -21,10 +23,13 @@ from interfaces.api.schemas import (
     ConfigValidateRequestSchema,
     InferenceRequestSchema,
     InferenceResponseSchema,
+    MetricsResponseSchema,
     OpsCommandSchema,
     OpsResponseSchema,
     PublishRequestSchema,
     PublishResponseSchema,
+    ReportGenerateRequestSchema,
+    ReportGenerateResponseSchema,
     ThetaOptimizationRequestSchema,
     ThetaOptimizationResponseSchema,
     TrainingRequestSchema,
@@ -141,6 +146,43 @@ def _create_router() -> APIRouter:
         deps = APIContainer.resolve()
         result = deps.config_usecase.rollback(payload.to_domain())
         return ConfigOperationResponseSchema.from_result(result)
+
+    @router.get("/metrics/model", response_model=MetricsResponseSchema)
+    def get_model_metrics(from_ts: datetime | None = None, to_ts: datetime | None = None):
+        deps = APIContainer.resolve()
+        payload = deps.analytics_service.get_model_metrics(MetricsQuery(start=from_ts, end=to_ts))
+        return MetricsResponseSchema.from_payload(payload)
+
+    @router.get("/metrics/trading", response_model=MetricsResponseSchema)
+    def get_trading_metrics(
+        from_ts: datetime | None = None,
+        to_ts: datetime | None = None,
+        pair_id: str | None = None,
+    ):
+        deps = APIContainer.resolve()
+        payload = deps.analytics_service.get_trading_metrics(
+            MetricsQuery(start=from_ts, end=to_ts, pair_id=pair_id),
+        )
+        return MetricsResponseSchema.from_payload(payload)
+
+    @router.get("/metrics/data-quality", response_model=MetricsResponseSchema)
+    def get_data_quality_metrics(from_ts: datetime | None = None, to_ts: datetime | None = None):
+        deps = APIContainer.resolve()
+        payload = deps.analytics_service.get_data_quality_metrics(MetricsQuery(start=from_ts, end=to_ts))
+        return MetricsResponseSchema.from_payload(payload)
+
+    @router.get("/metrics/risk", response_model=MetricsResponseSchema)
+    def get_risk_metrics(from_ts: datetime | None = None, to_ts: datetime | None = None):
+        deps = APIContainer.resolve()
+        payload = deps.analytics_service.get_risk_metrics(MetricsQuery(start=from_ts, end=to_ts))
+        return MetricsResponseSchema.from_payload(payload)
+
+    @router.post("/reports/generate", response_model=ReportGenerateResponseSchema)
+    def generate_report(payload: ReportGenerateRequestSchema):
+        deps = APIContainer.resolve()
+        query = payload.to_query()
+        result = deps.analytics_service.generate_report(payload.report_type, query)
+        return ReportGenerateResponseSchema.from_payload(payload.report_type, result)
 
     return router
 

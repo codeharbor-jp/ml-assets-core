@@ -13,6 +13,8 @@ from domain import DatasetPartition, ModelArtifact, ThetaParams
 from domain.models.signal import Signal
 from domain.value_objects import ThetaRange
 from application.services import (
+    MetricsPayload,
+    MetricsQuery,
     BacktestRequest,
     BacktestResult,
     StressScenario,
@@ -276,4 +278,44 @@ class ConfigOperationResponseSchema(BaseModel):
     @classmethod
     def from_result(cls, result: ConfigOperationResult) -> "ConfigOperationResponseSchema":
         return cls(action=result.action, payload=result.payload)
+
+
+class MetricsResponseSchema(BaseModel):
+    generated_at: datetime
+    data: Sequence[Mapping[str, float]]
+    meta: Mapping[str, str]
+
+    @classmethod
+    def from_payload(cls, payload: MetricsPayload) -> "MetricsResponseSchema":
+        return cls(
+            generated_at=payload.generated_at,
+            data=payload.data,
+            meta=payload.meta,
+        )
+
+
+class ReportGenerateRequestSchema(BaseModel):
+    report_type: str
+    from_ts: datetime | None = None
+    to_ts: datetime | None = None
+    pair_id: str | None = None
+
+    def to_query(self) -> MetricsQuery:
+        return MetricsQuery(start=self.from_ts, end=self.to_ts, pair_id=self.pair_id)
+
+
+class ReportGenerateResponseSchema(BaseModel):
+    report_type: str
+    generated_at: datetime
+    data: Sequence[Mapping[str, float]]
+    meta: Mapping[str, str]
+
+    @classmethod
+    def from_payload(cls, report_type: str, payload: MetricsPayload) -> "ReportGenerateResponseSchema":
+        return cls(
+            report_type=report_type,
+            generated_at=payload.generated_at,
+            data=payload.data,
+            meta=payload.meta,
+        )
 

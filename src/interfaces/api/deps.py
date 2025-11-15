@@ -6,12 +6,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from application import (
-    BacktesterService,
-    DatasetCatalogBuilder,
-    ThetaOptimizationService,
-    TrainerService,
-)
+from application import AnalyticsService, BacktesterService, DatasetCatalogBuilder, ThetaOptimizationService, TrainerService
 from application.usecases import (
     ConfigManagementUseCase,
     InferenceUseCase,
@@ -36,6 +31,7 @@ class ApiDependencies:
     backtester_service: BacktesterService
     theta_optimizer: ThetaOptimizationService
     catalog_builder: DatasetCatalogBuilder
+    analytics_service: AnalyticsService
 
 
 class APIContainer:

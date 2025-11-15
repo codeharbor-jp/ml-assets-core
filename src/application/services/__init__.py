@@ -2,6 +2,7 @@
 アプリケーションサービスの公開API。
 """
 
+from .analytics import AnalyticsService, AnalyticsRepository, MetricsPayload, MetricsQuery
 from .backtester import BacktestRequest, BacktestResult, Backtester, BacktesterService, StressScenario
 from .dataset_catalog_builder import (
     DataQualityEvaluator,
@@ -62,6 +63,10 @@ __all__ = [
     "FeatureBuildError",
     "QuarantinedPartitionError",
     "DataQualityThresholdExceededError",
+    "AnalyticsService",
+    "AnalyticsRepository",
+    "MetricsPayload",
+    "MetricsQuery",
     "ModelArtifactBuilder",
     "ThetaEstimator",
     "TimeSeriesCVStrategy",

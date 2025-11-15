@@ -61,14 +61,14 @@
 - [x] Slack/PagerDuty 通知テンプレートを整備し、重大度別ルーティングを Prefect フローと Ops サービスから利用できるよう統合。
 
 ### 3. IaC・配布・運用整備
-- [ ] Prefect Work Pool / Redis / PostgreSQL を構築する Terraform/Helm テンプレートを `deployments/` に作成し、環境変数・シークレット管理をドキュメント化。
-- [ ] モデル配布（SFTP/共有ストレージ）と `models_root` 配下のチェックサム管理を実装し、配布 Runbook を更新。
-- [ ] 監査ログ WORM 保存と DR/バックアップ手順の IaC 連携、Ops Runbook（halt/flatten/resume）の詳細化を実施。
+- [x] Prefect Work Pool / Redis / PostgreSQL を構築する Terraform/Helm テンプレートを `deployments/` に作成し、環境変数・シークレット管理をドキュメント化。
+- [x] モデル配布（SFTP/共有ストレージ）と `models_root` 配下のチェックサム管理を実装し、配布 Runbook を更新。
+- [x] 監査ログ WORM 保存と DR/バックアップ手順の IaC 連携、Ops Runbook（halt/flatten/resume）の詳細化を実施。
 
 ### 4. Analytics / ダッシュボード
-- [ ] FastAPI `GET /metrics/*` / `POST /reports/*` を実装し、Analytics API と Redis キャッシュを整備。
-- [ ] Next.js ダッシュボード（SSR+SWR）を仮実装し、主要 KPI（Sharpe, MaxDD, DQ 指標, Ops 状態）を可視化。
-- [ ] Prefect/再学習メトリクスをダッシュボードに取り込み、Slack 通知と連動するアラート設定を文書化。
+- [x] FastAPI `GET /metrics/*` / `POST /reports/*` を実装し、Analytics API と Redis キャッシュを整備。
+- [x] Next.js ダッシュボード（SSR+SWR）を仮実装し、主要 KPI（Sharpe, MaxDD, DQ 指標, Ops 状態）を可視化。
+- [x] Prefect/再学習メトリクスをダッシュボードに取り込み、Slack 通知と連動するアラート設定を文書化。
 
 ### 5. データ品質・E2E 強化
 - [ ] Great Expectations（または同等ツール）でデータ品質テストを自動化し、CI と Prefect フローに統合。

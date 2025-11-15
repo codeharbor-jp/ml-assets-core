@@ -8,7 +8,9 @@ services:
         reservations:
           devices:
             - capabilities: [gpu]
+    environment:
+      - SERVICE_PORT=8002
     volumes:
       - ../data-assets-pipeline/data:/data
     ports:
-      - "8002:8002"
+      - "${ML_CORE_PORT:-8820}:8002"
