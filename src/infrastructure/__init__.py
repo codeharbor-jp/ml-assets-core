@@ -2,6 +2,16 @@
 インフラ層のパッケージ初期化。
 """
 
+from .backtest import (
+    BacktestEngineError,
+    BacktestEngineHttpClient,
+    BacktestEngineSettings,
+    BacktestPolicy,
+    BacktestRequestFactory,
+    EvaluationThresholds,
+    EngineRunConfig,
+    ThresholdStressEvaluator,
+)
 from .cache import RedisAnalyticsCache
 from .configs import (
     ConfigNotFoundError,
@@ -18,6 +28,8 @@ from .features.hasher import JsonFeatureHasher
 from .notifications import SlackConfig, SlackNotifier, SlackWebhookNotifier
 from .repositories import PostgresAuditLogger, PostgresMetricsRepository, PostgresRegistryUpdater
 from .repositories.analytics import PostgresAnalyticsRepository
+from .theta import DeltaConstraintEvaluator, HistoricalThetaScorer, RandomOptunaStrategy, UniformGridSearchStrategy
+from .training import LocalModelArtifactBuilder, LogisticModelTrainer, RollingTimeSeriesCV, SimpleThetaEstimator
 from .storage.filesystem import LocalFileSystemStorageClient
 from .storage.json_parquet import JsonParquetReader, JsonParquetWriter
 from .storage.path_resolver import StoragePathResolver
@@ -51,5 +63,21 @@ __all__ = [
     "JsonParquetReader",
     "JsonParquetWriter",
     "RedisAnalyticsCache",
+    "RollingTimeSeriesCV",
+    "LogisticModelTrainer",
+    "SimpleThetaEstimator",
+    "LocalModelArtifactBuilder",
+    "BacktestEngineHttpClient",
+    "BacktestEngineSettings",
+    "BacktestEngineError",
+    "BacktestPolicy",
+    "EngineRunConfig",
+    "EvaluationThresholds",
+    "BacktestRequestFactory",
+    "ThresholdStressEvaluator",
+    "UniformGridSearchStrategy",
+    "RandomOptunaStrategy",
+    "DeltaConstraintEvaluator",
+    "HistoricalThetaScorer",
 ]
 

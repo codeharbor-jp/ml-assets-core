@@ -1,0 +1,11 @@
+core_policy:
+  theta1_initial: 0.7
+  theta2_initial: 0.3
+  theta_search_range:
+    theta1: [0.6, 0.85]
+    theta2: [0.2, 0.45]
+  theta_constraints:
+    max_delta: 0.1
+    baseline_theta1: 0.7
+    baseline_theta2: 0.3
+

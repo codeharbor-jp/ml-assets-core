@@ -1,0 +1,5 @@
+backtest_engine:
+  base_url: "http://localhost:8900"
+  api_token: "dev-backtest-token"
+  verify_ssl: false
+

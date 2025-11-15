@@ -46,6 +46,7 @@ class DummyBackend:
     def __init__(self, name: str) -> None:
         self.name = name
         self.calls: list[str] = []
+        self.coefficients: list[float] = []
 
     def fit(
         self,
@@ -76,6 +77,9 @@ class DummyBackend:
             sample_size=len(valid_labels) or 1,
         )
 
+    def dump_state(self) -> Mapping[str, object]:
+        return {"weights": self.coefficients or [0.1, 0.2]}
+
 
 class DummyMetricsRepository:
     def __init__(self) -> None:
@@ -86,7 +90,13 @@ class DummyMetricsRepository:
 
 
 class DummyArtifactBuilder(ModelArtifactBuilder):
-    def build(self, *, request: TrainingRequest, metrics: Mapping[str, float]) -> ModelArtifact:
+    def build(
+        self,
+        *,
+        request: TrainingRequest,
+        metrics: Mapping[str, float],
+        model_state: Mapping[str, Mapping[str, object]] | None = None,
+    ) -> ModelArtifact:
         return ModelArtifact(
             model_version=request.metadata.get("model_version", "test-model"),
             created_at=datetime.now(timezone.utc),

@@ -75,6 +75,13 @@
 - [x] 実データ取得→学習→バックテスト→θ更新→推論→Redis 配信→Analytics 集計までの E2E シナリオテストを構築。
 - [x] リリースゲートスクリプトに DQ/E2E チェックを追加し、ローンチ可否判断の自動化を行う。
 
+### 6. モデル学習・配布 本実装仕上げ
+- [ ] LearningUseCase と TrainerService を本実装し、実データパーティションから特徴量生成→学習→成果物生成までを通せるようにする。
+- [ ] BacktesterService と ThetaOptimizationService をバックエンド実装に接続し、Prefect フローから再学習チェーンを実行可能にする。
+- [ ] ModelPublishService と RegistryUpdater を本番ストレージ／PostgreSQL に連動させ、WORM ログ・通知まで含めた配布処理を完成させる。
+- [ ] interfaces.api の DI 構成を本実装と接続し、FastAPI から学習／配布／Ops を発火できるエントリポイントを整備する。
+- [ ] サンプル実データ（ダミーでも可）と Prefect フローのランブックを整備し、「データ投入→学習→配布」までの手順を再現できる状態にする。
+
 ---
 
 ## ml-assets-core 実装TODOロードマップ v1（スケルトン整備）

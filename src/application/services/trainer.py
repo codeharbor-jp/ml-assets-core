@@ -56,6 +56,9 @@ class ModelTrainerBackend(Protocol):
     ) -> CalibrationMetrics:
         ...
 
+    def dump_state(self) -> Mapping[str, object]:
+        """学習済みモデルのシリアライズ可能な状態を返す。"""
+
 
 class MetricsRepository(Protocol):
     """
@@ -71,7 +74,13 @@ class ModelArtifactBuilder(Protocol):
     学習済みモデルアーティファクトを作成するファクトリ。
     """
 
-    def build(self, *, request: "TrainingRequest", metrics: Mapping[str, float]) -> ModelArtifact:
+    def build(
+        self,
+        *,
+        request: "TrainingRequest",
+        metrics: Mapping[str, float],
+        model_state: Mapping[str, Mapping[str, object]] | None = None,
+    ) -> ModelArtifact:
         ...
 
 
@@ -239,7 +248,16 @@ class Trainer(TrainerService):
             calibration_metrics=calibration_metrics,
         )
 
-        artifact = self._artifact_builder.build(request=request, metrics=cv_metrics)
+        model_state = {
+            "ai1": dict(self._backend_ai1.dump_state()),
+            "ai2": dict(self._backend_ai2.dump_state()),
+        }
+
+        artifact = self._artifact_builder.build(
+            request=request,
+            metrics=cv_metrics,
+            model_state=model_state,
+        )
         training_artifact = TrainingArtifact(
             artifact=artifact,
             theta_params=theta_params,

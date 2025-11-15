@@ -1,0 +1,7 @@
+cost_table:
+  overrides:
+    EURUSD:
+      spread_bps: 4
+    USDJPY:
+      spread_bps: 3
+

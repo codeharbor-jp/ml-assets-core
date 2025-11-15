@@ -2,7 +2,7 @@
 ユースケース層の公開API。
 """
 
-from .learning import LearningRequest, LearningResponse, LearningUseCase
+from .learning import LearningRequest, LearningResponse, LearningService, LearningUseCase
 from .inference import InferenceRequest, InferenceResponse, InferenceUseCase
 from .publish import ModelPublishService, PublishRequest, PublishResponse, PublishUseCase
 from .ops import OpsCommand, OpsResponse, OpsUseCase
@@ -21,6 +21,7 @@ __all__ = [
     "LearningUseCase",
     "LearningRequest",
     "LearningResponse",
+    "LearningService",
     "InferenceUseCase",
     "InferenceRequest",
     "InferenceResponse",

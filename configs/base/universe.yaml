@@ -1,0 +1,14 @@
+universe:
+  pairs:
+    - pair_id: "EURUSD_USDJPY"
+      leg_A:
+        canonical_symbol: "EURUSD"
+        tick_size: 0.0001
+        min_lot: 0.01
+        lot_step: 0.01
+      leg_B:
+        canonical_symbol: "USDJPY"
+        tick_size: 0.001
+        min_lot: 0.01
+        lot_step: 0.01
+

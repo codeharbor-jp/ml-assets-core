@@ -3,6 +3,10 @@
 """
 
 from .services import (
+    AnalyticsRepository,
+    AnalyticsService,
+    MetricsPayload,
+    MetricsQuery,
     BacktestRequest,
     BacktestResult,
     BacktesterService,
@@ -36,6 +40,10 @@ __all__ = [
     "FeatureBuilderService",
     "FeatureBuildRequest",
     "FeatureBuildResult",
+    "AnalyticsService",
+    "AnalyticsRepository",
+    "MetricsPayload",
+    "MetricsQuery",
     "TrainerService",
     "TrainingRequest",
     "TrainingResult",

@@ -1,0 +1,9 @@
+backtest_engine:
+  base_url: null  # 環境別ファイル（envs/<env>/backtest_engine.yaml）で必ず上書きすること
+  api_token: null  # Vault などのシークレットストアから供給する
+  timeout_seconds: 30
+  run_timeout_seconds: 600
+  verify_ssl: true
+  max_retries: 2
+  retry_backoff_seconds: 2.0
+

@@ -1,0 +1,4 @@
+core_policy:
+  theta_constraints:
+    max_delta: 0.12
+

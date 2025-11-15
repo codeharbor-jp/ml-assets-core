@@ -3,6 +3,8 @@ services:
     build: .
     container_name: ml-core
     image: ml-core:cuda
+    command: >
+      sh -c "uvicorn interfaces.api.server:app --host 0.0.0.0 --port 8002"
     deploy:
       resources:
         reservations:
@@ -10,7 +12,27 @@ services:
             - capabilities: [gpu]
     environment:
       - SERVICE_PORT=8002
+      - PYTHONPATH=/app/src
     volumes:
       - ../data-assets-pipeline/data:/data
     ports:
       - "${ML_CORE_PORT:-8820}:8002"
+  analytics-dashboard:
+    image: node:20-bullseye
+    container_name: analytics-dashboard
+    working_dir: /app
+    environment:
+      - NEXT_PUBLIC_CORE_API_URL=http://ml-core:8002/api/v1
+      - HOST=0.0.0.0
+      - PORT=${FRONTEND_PORT:-3820}
+    volumes:
+      - ./dashboards/analytics:/app
+      - analytics_node_modules:/app/node_modules
+    command: >
+      sh -c "npm install --legacy-peer-deps && npm run dev -- --hostname 0.0.0.0 --port $$PORT"
+    ports:
+      - "${FRONTEND_PORT:-3820}:3820"
+    depends_on:
+      - ml-core
+volumes:
+  analytics_node_modules:

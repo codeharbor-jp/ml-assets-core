@@ -1,0 +1,10 @@
+backtest_policy:
+  engine:
+    dataset_root: "/tmp/ml-assets-core/canonical"
+    cost_table_path: "/tmp/ml-assets-core/configs/cost_table.yaml"
+    universe_path: "/tmp/ml-assets-core/configs/universe.yaml"
+    output_root: "/tmp/ml-assets-core/backtests"
+    period:
+      start: "2023-01-01T00:00:00Z"
+      end: "2023-12-31T23:59:59Z"
+

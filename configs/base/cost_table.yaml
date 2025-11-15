@@ -1,0 +1,7 @@
+cost_table:
+  defaults:
+    commission_bps: 10
+    slippage_bps: 8
+    spread_bps: 5
+  overrides: {}
+

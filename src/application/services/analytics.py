@@ -38,7 +38,7 @@ class MetricsPayload:
     """
 
     generated_at: datetime
-    data: Sequence[Mapping[str, float]]
+    data: Sequence[Mapping[str, object]]
     meta: Mapping[str, str] = field(default_factory=dict)
 
     def to_mapping(self) -> dict[str, object]:
@@ -72,16 +72,16 @@ class AnalyticsRepository(Protocol):
     データソースからメトリクスを取得するリポジトリのプロトコル。
     """
 
-    def fetch_model_metrics(self, query: MetricsQuery) -> Sequence[Mapping[str, float]]:
+    def fetch_model_metrics(self, query: MetricsQuery) -> Sequence[Mapping[str, object]]:
         ...
 
-    def fetch_trading_metrics(self, query: MetricsQuery) -> Sequence[Mapping[str, float]]:
+    def fetch_trading_metrics(self, query: MetricsQuery) -> Sequence[Mapping[str, object]]:
         ...
 
-    def fetch_data_quality_metrics(self, query: MetricsQuery) -> Sequence[Mapping[str, float]]:
+    def fetch_data_quality_metrics(self, query: MetricsQuery) -> Sequence[Mapping[str, object]]:
         ...
 
-    def fetch_risk_metrics(self, query: MetricsQuery) -> Sequence[Mapping[str, float]]:
+    def fetch_risk_metrics(self, query: MetricsQuery) -> Sequence[Mapping[str, object]]:
         ...
 
 
@@ -159,7 +159,7 @@ class AnalyticsService:
         self,
         category: str,
         query: MetricsQuery,
-        fetcher: Callable[[MetricsQuery], Sequence[Mapping[str, float]]],
+        fetcher: Callable[[MetricsQuery], Sequence[Mapping[str, object]]],
     ) -> MetricsPayload:
         cache_key = f"{category}:{query.cache_key()}"
         if self._cache:

@@ -1,0 +1,38 @@
+backtest_policy:
+  engine:
+    timeframe: "1h"
+    dataset_root: "/data/canonical"
+    period:
+      start: "2024-01-01T00:00:00Z"
+      end: "2024-06-30T00:00:00Z"
+    cost_table_path: "/data/configs/cost_table.yaml"
+    universe_path: "/data/configs/universe.yaml"
+    output_root: "/data/backtests"
+  entry_rule:
+    value:
+      use_theta: true
+      use_position_scale: true
+  exit_rule:
+    value:
+      z_exit: 0.5
+      max_bars: 48
+      theta_stop: 0.45
+  costs:
+    value:
+      commission_bps_default: 10
+      slippage_bps_default: 8
+      spread_bps_default: 5
+  stress:
+    value:
+      vol_spike: [1.5, 2.0]
+      corr_breakdown: [0.0, 0.2]
+      cost_increase: [10, 30]
+      latency_bars: [1]
+      gap_percent: [0.5, 1.0]
+  evaluation:
+    value:
+      min_sharpe: 1.2
+      max_drawdown: 0.12
+      min_trades: 150
+      max_halt_rate: 0.4
+

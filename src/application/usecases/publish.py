@@ -6,11 +6,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Mapping, Protocol
+from typing import Mapping, Protocol, TYPE_CHECKING
 
 from domain import ModelArtifact, ThetaParams
 
-from infrastructure.storage import ModelArtifactDistributor, ModelDistributionResult, WormAppendResult, WormArchiveWriter
+if TYPE_CHECKING:
+    from infrastructure.storage import ModelArtifactDistributor, ModelDistributionResult, WormAppendResult, WormArchiveWriter
 
 
 @dataclass(frozen=True)
@@ -70,10 +71,10 @@ class ModelPublishService(PublishUseCase):
     def __init__(
         self,
         *,
-        distributor: ModelArtifactDistributor,
+        distributor: "ModelArtifactDistributor",
         registry_updater: RegistryUpdater,
         notification_service: NotificationService | None = None,
-        worm_writer: WormArchiveWriter | None = None,
+        worm_writer: "WormArchiveWriter" | None = None,
         clock: callable | None = None,
     ) -> None:
         self._distributor = distributor
@@ -93,7 +94,7 @@ class ModelPublishService(PublishUseCase):
         }
         return PublishResponse(status="success", audit_record_id=audit_record_id, diagnostics=diagnostics)
 
-    def _distribute_artifacts(self, request: PublishRequest) -> ModelDistributionResult:
+    def _distribute_artifacts(self, request: PublishRequest) -> "ModelDistributionResult":
         artifact = request.artifact
         metadata = {
             "created_at": artifact.created_at.isoformat(),
@@ -121,9 +122,9 @@ class ModelPublishService(PublishUseCase):
     def _record_worm_log(
         self,
         request: PublishRequest,
-        distribution: ModelDistributionResult,
+        distribution: "ModelDistributionResult",
         audit_record_id: str,
-    ) -> WormAppendResult | None:
+    ) -> "WormAppendResult" | None:
         if not self._worm_writer:
             return None
         payload = {
@@ -139,7 +140,7 @@ class ModelPublishService(PublishUseCase):
     def _notify(
         self,
         request: PublishRequest,
-        distribution: ModelDistributionResult,
+        distribution: "ModelDistributionResult",
         audit_record_id: str,
     ) -> None:
         if not self._notification:

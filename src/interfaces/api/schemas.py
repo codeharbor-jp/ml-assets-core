@@ -282,7 +282,7 @@ class ConfigOperationResponseSchema(BaseModel):
 
 class MetricsResponseSchema(BaseModel):
     generated_at: datetime
-    data: Sequence[Mapping[str, float]]
+    data: Sequence[Mapping[str, object]]
     meta: Mapping[str, str]
 
     @classmethod
@@ -307,7 +307,7 @@ class ReportGenerateRequestSchema(BaseModel):
 class ReportGenerateResponseSchema(BaseModel):
     report_type: str
     generated_at: datetime
-    data: Sequence[Mapping[str, float]]
+    data: Sequence[Mapping[str, object]]
     meta: Mapping[str, str]
 
     @classmethod
