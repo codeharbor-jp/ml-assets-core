@@ -11,7 +11,11 @@ from .container import (
 )
 from .config_loader import AppConfigModel, LoggingConfigModel, MetricsConfigModel, YamlConfigLoader
 from .logging_setup import DictConfigLoggingConfigurator
-from .metrics_setup import MetricsConfiguratorRegistry, NoopMetricsConfigurator
+from .metrics_setup import (
+    MetricsConfiguratorRegistry,
+    NoopMetricsConfigurator,
+    PrometheusMetricsConfigurator,
+)
 
 __all__ = [
     "BootstrapContainer",
@@ -22,6 +26,7 @@ __all__ = [
     "DictConfigLoggingConfigurator",
     "MetricsConfiguratorRegistry",
     "NoopMetricsConfigurator",
+    "PrometheusMetricsConfigurator",
     "YamlConfigLoader",
     "AppConfigModel",
     "LoggingConfigModel",

@@ -1,5 +1,19 @@
 metrics:
-  provider: noop
+  provider: prometheus
   options:
-    exporter_endpoint: null
+    host: "0.0.0.0"
+    port: 9100
+    histogram_buckets:
+      inference_latency_ms: [5, 10, 25, 50, 100, 200, 400, 800]
+      feature_build_duration_seconds: [0.05, 0.1, 0.25, 0.5, 1, 2, 5]
+      core_retrain_duration_seconds: [10, 30, 60, 120, 300, 600]
+      core_backtest_duration_seconds: [10, 30, 60, 120, 300, 600]
+    default_labels:
+      service: "ml-assets-core"
+    otel:
+      enabled: false
+      endpoint: "http://otel-collector:4317"
+      insecure: true
+      service_name: "ml-assets-core"
+      timeout_seconds: 5
 

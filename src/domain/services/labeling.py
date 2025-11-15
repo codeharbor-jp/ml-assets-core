@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from math import log
-from typing import Mapping, Sequence
+from typing import Iterable, Mapping, Sequence, cast
 
 from ..value_objects import CalibrationMetrics
 from .interfaces import LabelingInput, LabelingOutput, LabelingService
@@ -44,11 +44,20 @@ class RuleBasedLabelingService(LabelingService):
         self._config = config or LabelingConfig()
 
     def generate(self, request: LabelingInput) -> LabelingOutput:
-        features: Sequence[Mapping[str, float]] = list(request.features)
-        self._validate_features(features)
+        numeric_features: list[dict[str, float]] = []
+        raw_features_iter = cast(Iterable[Mapping[str, object]], request.features)
+        for feature in raw_features_iter:
+            missing = self.REQUIRED_KEYS - feature.keys()
+            if missing:
+                missing_keys = ", ".join(sorted(missing))
+                raise KeyError(f"特徴量に必要なキーが不足しています: {missing_keys}")
+            numeric_entry: dict[str, float] = {}
+            for key in self.REQUIRED_KEYS:
+                numeric_entry[key] = _as_float(feature[key], key)
+            numeric_features.append(numeric_entry)
 
-        ai1_labels = self._generate_ai1_labels(features)
-        ai2_labels = self._generate_ai2_labels(features)
+        ai1_labels = self._generate_ai1_labels(numeric_features)
+        ai2_labels = self._generate_ai2_labels(numeric_features)
         ai3_targets = self._generate_ai3_targets(ai1_labels, ai2_labels)
         metrics = self._build_calibration_metrics(ai1_labels)
 
@@ -58,16 +67,6 @@ class RuleBasedLabelingService(LabelingService):
             ai3_targets=ai3_targets,
             calibration_metrics=metrics,
         )
-
-    def _validate_features(self, features: Sequence[Mapping[str, float]]) -> None:
-        missing = set()
-        for feature in features:
-            missing.update(self.REQUIRED_KEYS - feature.keys())
-            if missing:
-                break
-        if missing:
-            missing_keys = ", ".join(sorted(missing))
-            raise KeyError(f"特徴量に必要なキーが不足しています: {missing_keys}")
 
     def _generate_ai1_labels(self, features: Sequence[Mapping[str, float]]) -> list[int]:
         cfg = self._config
@@ -140,4 +139,13 @@ class RuleBasedLabelingService(LabelingService):
             log_loss=log_loss,
             sample_size=sample_size,
         )
+
+
+def _as_float(value: object, key: str) -> float:
+    if isinstance(value, (int, float)):
+        return float(value)
+    try:
+        return float(str(value))
+    except (TypeError, ValueError) as exc:  # pragma: no cover - 異常系
+        raise ValueError(f"特徴量 {key} を float に変換できません。") from exc
 

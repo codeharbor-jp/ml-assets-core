@@ -1,0 +1,26 @@
+sources:
+  providers:
+    - name: "twelvedata"
+      type: "twelvedata"
+      priority: 1
+      enabled: true
+      settings:
+        base_url: "https://api.twelvedata.com"
+        api_key: "$TWELVEDATA_API_KEY"
+        timeout_seconds: 5.0
+        max_retries: 3
+        retry_backoff_seconds: 1.0
+    - name: "secondary_rest"
+      type: "secondary_rest"
+      priority: 2
+      enabled: true
+      settings:
+        base_url: "https://secondary.example.com/market-data"
+        auth_token: "$SECONDARY_API_TOKEN"
+        timeout_seconds: 5.0
+        max_retries: 2
+        retry_backoff_seconds: 1.0
+  failover:
+    max_attempts: 2
+    backoff_seconds: 2.0
+

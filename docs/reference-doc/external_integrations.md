@@ -42,11 +42,60 @@
 
 Ops ユースケースは監査ログと Redis 連携に加えて、Slack 通知を送信する。
 
+## マーケットデータソース (`sources.yaml`)
+
+| 項目 | 説明 |
+| ---- | ---- |
+| `sources.providers[].name` | プロバイダ識別子。例: `twelvedata`, `secondary_rest`。 |
+| `sources.providers[].priority` | フェイルオーバ時の優先順位（小さいほど先に試行）。 |
+| `sources.providers[].settings.base_url` | API ベース URL。環境差分は `configs/envs/<env>/sources.yaml` で上書きする。 |
+| `sources.providers[].settings.api_key` / `auth_token` | `$ENV_VAR` 形式で環境変数を参照。未設定の場合は起動時にエラー。 |
+| `sources.providers[].settings.timeout_seconds` | HTTP タイムアウト秒。 |
+| `sources.providers[].settings.max_retries` | プロバイダ内部での再試行回数。 |
+| `sources.providers[].settings.retry_backoff_seconds` | 再試行間隔の秒数。 |
+| `sources.failover.max_attempts` | プロバイダ群全体のフェイルオーバ試行回数。 |
+| `sources.failover.backoff_seconds` | フェイルオーバ試行間の待機時間。 |
+
+`MarketDataProviderFactory` は `sources.yaml` から設定を読み込み、`TwelveData` → `Secondary` の順でフェイルオーバを行う。
+
+## Prometheus / OpenTelemetry
+
+| 項目 | 説明 |
+| ---- | ---- |
+| `metrics.provider` | `prometheus` を指定するとエクスポータが有効化される。 |
+| `metrics.options.host` / `port` | `/metrics` エンドポイントを公開するアドレスとポート。`port<=0` の場合は公開しない。 |
+| `metrics.options.histogram_buckets` | メトリクスごとのヒストグラムバケットを秒/ミリ秒単位で定義。 |
+| `metrics.options.default_labels` | すべてのメトリクスに付与するデフォルトラベル（例: `service`, `environment`）。 |
+| `metrics.options.otel.*` | OTLP エクスポータ設定。`endpoint`、`timeout_seconds`、`service_name` などを定義。 |
+
+`PrometheusMetricsConfigurator` が HTTP サーバを起動し、`MetricsRecorder` により `inference_latency_ms`、`core_retrain_duration_seconds` 等のメトリクスが更新される。`otel.enabled=true` の場合は OTLP へスパンが送信される。
+
+## WORM アーカイブ / バックアップ
+
+| 項目 | 説明 |
+| ---- | ---- |
+| `storage.worm_root` | 監査ログを WORM 形式で保存するパス。`WormArchiveWriter.append` がこのディレクトリ配下に `record_type/YYYY/YYYYMM/` 構造で JSON を作成し、パーミッションを `444` に設定する。 |
+| `storage.backups_root` | オフラインバックアップ（スナップショットや圧縮アーカイブ）を一時的に格納するパス。IaC でマウントする永続ボリュームを想定。 |
+| `deployments/terraform` | Prefect Work Pool / Redis / PostgreSQL を構築する Terraform テンプレート。`terraform output` の値を ml-assets-core の設定 (`configs/envs/<env>/`) に反映する。 |
+| `deployments/helm/prefect-worker` | Prefect Worker を Kubernetes に展開する Helm チャート。Terraform を使わない環境でも統一したデプロイが可能。 |
+
 ## 設定例
 
 ```
 See configs/examples/external_services.example.yaml
 ```
+
+## PagerDuty 通知
+
+| 項目 | 説明 |
+| ---- | ---- |
+| `notifications.pagerduty.routing_key` | PagerDuty Events API のルーティングキー。必須。 |
+| `default_severity` | 省略時の重大度（`critical`, `error`, `warning`, `info` 等）。 |
+| `source` / `component` / `group` | インシデントの属性として付与される文字列。 |
+| `enabled` | false にすると通知を抑止。 |
+| `timeout_seconds` | HTTP タイムアウト。 |
+
+`PagerDutyNotifier` は `events.pagerduty.com/v2/enqueue` に JSON を送信し、Ops/Prefect フローから重大イベント通知を行う。
 
 ## ローカル検証手順
 

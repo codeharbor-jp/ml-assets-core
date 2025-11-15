@@ -4,8 +4,14 @@
 
 from __future__ import annotations
 
+import logging
+import time
 from dataclasses import dataclass, field
 from typing import Mapping, Protocol, Sequence
+
+from prefect import get_run_logger
+
+from application.observability import metrics_recorder, telemetry_span
 
 from domain import ModelArtifact
 
@@ -98,33 +104,55 @@ class Backtester(BacktesterService):
         self._stress_evaluator = stress_evaluator
 
     def run(self, request: BacktestRequest) -> BacktestResult:
-        response = self._engine.run(
-            model_artifact=request.model_artifact,
-            params=request.params,
-            config=request.engine_config,
-            stress_scenarios=request.stress_scenarios,
-        )
+        with telemetry_span(
+            "backtester.run",
+            {"model_version": request.model_artifact.model_version},
+        ):
+            start = time.perf_counter()
+            try:
+                logger = get_run_logger()
+            except Exception:  # pragma: no cover - Prefect が無い環境では標準ロガーを利用
+                logger = logging.getLogger("ml_assets_core.backtester")
+            logger.info("Starting backtest for model_version=%s", request.model_artifact.model_version)
 
-        summary = _extract_mapping(response, "summary", fallback={})
-        stress = _extract_nested_mapping(response, "stress", fallback={})
-        diagnostics = _extract_mapping(response, "diagnostics", fallback={})
+            response = self._engine.run(
+                model_artifact=request.model_artifact,
+                params=request.params,
+                config=request.engine_config,
+                stress_scenarios=request.stress_scenarios,
+            )
 
-        evaluation = self._stress_evaluator.evaluate(
-            base_metrics=summary,
-            stress_metrics=stress,
-        )
+            summary = _extract_mapping(response, "summary", fallback={})
+            stress = _extract_nested_mapping(response, "stress", fallback={})
+            diagnostics = _extract_mapping(response, "diagnostics", fallback={})
 
-        diagnostics = {
-            **diagnostics,
-            "requested_scenarios": float(len(request.stress_scenarios)),
-        }
+            evaluation = self._stress_evaluator.evaluate(
+                base_metrics=summary,
+                stress_metrics=stress,
+            )
 
-        return BacktestResult(
-            summary_metrics=summary,
-            stress_metrics=stress,
-            evaluation=evaluation,
-            diagnostics=diagnostics,
-        )
+            diagnostics = {
+                **diagnostics,
+                "requested_scenarios": float(len(request.stress_scenarios)),
+            }
+
+            duration = time.perf_counter() - start
+            metrics_recorder.observe_backtest_duration(
+                request.model_artifact.model_version,
+                duration_seconds=duration,
+            )
+            logger.info(
+                "Backtest completed for model_version=%s in %.2f seconds",
+                request.model_artifact.model_version,
+                duration,
+            )
+
+            return BacktestResult(
+                summary_metrics=summary,
+                stress_metrics=stress,
+                evaluation=evaluation,
+                diagnostics=diagnostics,
+            )
 
 
 def _extract_mapping(

@@ -1,0 +1,8 @@
+storage:
+  canonical_root: "/var/lib/ml-assets-core/canonical"
+  features_root: "/var/lib/ml-assets-core/features"
+  snapshots_root: "/var/lib/ml-assets-core/snapshots"
+  models_root: "/var/lib/ml-assets-core/models"
+  worm_root: "/var/lib/ml-assets-core/worm"
+  backups_root: "/var/lib/ml-assets-core/backups"
+

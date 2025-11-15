@@ -5,4 +5,11 @@ notifications:
     username: "ml-assets-core"
     timeout_seconds: 5
     enabled: true
+  pagerduty:
+    routing_key: null  # envs/<env>/notifications.yaml で必ず上書きすること
+    default_severity: "critical"
+    source: "ml-assets-core"
+    component: "ml-core"
+    timeout_seconds: 5
+    enabled: false
 

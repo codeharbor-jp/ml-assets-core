@@ -1,5 +1,3 @@
 metrics:
   provider: noop
-  options:
-    exporter_endpoint: null
 

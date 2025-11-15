@@ -1,0 +1,11 @@
+sources:
+  providers:
+    - name: "twelvedata"
+      settings:
+        base_url: "https://api.twelvedata.com"
+        api_key: "$TWELVEDATA_API_KEY"
+    - name: "secondary_rest"
+      settings:
+        base_url: "https://secondary.example.com/market-data"
+        auth_token: "$SECONDARY_API_TOKEN"
+

@@ -4,8 +4,11 @@
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass, field
 from typing import Iterable, Mapping, Protocol, Sequence
+
+from application.observability import metrics_recorder, telemetry_span
 
 from domain import DataQualityFlag, DataQualitySnapshot, DatasetPartition
 
@@ -144,61 +147,77 @@ class FeatureBuilder:
         self._config = config or FeatureBuilderConfig()
 
     def build(self, request: FeatureBuildRequest) -> FeatureBuildResult:
-        dq_flag = self._evaluate_quality(request)
-        if dq_flag == DataQualityFlag.QUARANTINE:
-            self._invalidate_cache(request, reason="partition_quarantined")
-            raise QuarantinedPartitionError(
-                f"Partition {request.partition.symbol} is quarantined and cannot be processed."
+        with telemetry_span(
+            "feature_builder.build",
+            {
+                "partition.symbol": request.partition.symbol,
+                "partition.timeframe": request.partition.timeframe,
+            },
+        ):
+            start = time.perf_counter()
+
+            dq_flag = self._evaluate_quality(request)
+            if dq_flag == DataQualityFlag.QUARANTINE:
+                self._invalidate_cache(request, reason="partition_quarantined")
+                raise QuarantinedPartitionError(
+                    f"Partition {request.partition.symbol} is quarantined and cannot be processed."
+                )
+
+            if not self._is_allowed_flag(dq_flag):
+                self._invalidate_cache(request, reason=f"dq_flag_{dq_flag.value}")
+                raise DataQualityThresholdExceededError(
+                    dq_flag,
+                    f"Partition {request.partition.symbol} exceeded data quality threshold ({dq_flag.value}).",
+                )
+
+            feature_hash = self._hasher.compute_hash(request.feature_spec, request.preprocessing)
+            schema_hash = self._hasher.compute_hash(request.feature_spec, {})
+
+            cached = False
+            if request.force_rebuild:
+                self._invalidate_cache(request, reason="force_rebuild")
+
+            if not request.force_rebuild and self._cache.exists(partition=request.partition, feature_hash=feature_hash):
+                cached = True
+                feature_iterable = self._cache.load(partition=request.partition, feature_hash=feature_hash)
+            else:
+                feature_iterable = self._generator.generate(
+                    partition=request.partition,
+                    feature_spec=request.feature_spec,
+                    preprocessing=request.preprocessing,
+                )
+
+            features: tuple[FeatureVector, ...] = tuple(feature_iterable)
+
+            if not cached:
+                self._cache.store(
+                    partition=request.partition,
+                    feature_hash=feature_hash,
+                    features=features,
+                    schema_hash=schema_hash,
+                )
+
+            metadata = {
+                "feature_hash": feature_hash,
+                "schema_hash": schema_hash,
+                "cached": "true" if cached else "false",
+            }
+
+            duration = time.perf_counter() - start
+            metrics_recorder.observe_feature_build(
+                request.partition.symbol,
+                duration_seconds=duration,
+                cached=cached,
             )
 
-        if not self._is_allowed_flag(dq_flag):
-            self._invalidate_cache(request, reason=f"dq_flag_{dq_flag.value}")
-            raise DataQualityThresholdExceededError(
-                dq_flag,
-                f"Partition {request.partition.symbol} exceeded data quality threshold ({dq_flag.value}).",
-            )
-
-        feature_hash = self._hasher.compute_hash(request.feature_spec, request.preprocessing)
-        schema_hash = self._hasher.compute_hash(request.feature_spec, {})
-
-        cached = False
-        if request.force_rebuild:
-            self._invalidate_cache(request, reason="force_rebuild")
-
-        if not request.force_rebuild and self._cache.exists(partition=request.partition, feature_hash=feature_hash):
-            cached = True
-            feature_iterable = self._cache.load(partition=request.partition, feature_hash=feature_hash)
-        else:
-            feature_iterable = self._generator.generate(
-                partition=request.partition,
-                feature_spec=request.feature_spec,
-                preprocessing=request.preprocessing,
-            )
-
-        features: tuple[FeatureVector, ...] = tuple(feature_iterable)
-
-        if not cached:
-            self._cache.store(
+            return FeatureBuildResult(
                 partition=request.partition,
                 feature_hash=feature_hash,
-                features=features,
                 schema_hash=schema_hash,
+                features=features,
+                dq_flag=dq_flag,
+                metadata=metadata,
             )
-
-        metadata = {
-            "feature_hash": feature_hash,
-            "schema_hash": schema_hash,
-            "cached": "true" if cached else "false",
-        }
-
-        return FeatureBuildResult(
-            partition=request.partition,
-            feature_hash=feature_hash,
-            schema_hash=schema_hash,
-            features=features,
-            dq_flag=dq_flag,
-            metadata=metadata,
-        )
 
     def _evaluate_quality(self, request: FeatureBuildRequest) -> DataQualityFlag:
         snapshot = request.dq_snapshot

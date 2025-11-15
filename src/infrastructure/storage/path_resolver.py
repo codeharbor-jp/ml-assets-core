@@ -35,5 +35,10 @@ class StoragePathResolver:
 
     def _load_storage_config(self) -> Mapping[str, object]:
         data = self.config_repository.load("storage", environment=self.environment)
+        if "storage" in data:
+            nested = data["storage"]
+            if not isinstance(nested, Mapping):
+                raise StoragePathError("'storage' セクションが Mapping ではありません。")
+            return cast(Mapping[str, object], nested)
         return cast(Mapping[str, object], data)
 

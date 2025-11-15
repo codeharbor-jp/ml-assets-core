@@ -15,6 +15,7 @@ from typing import Callable, Mapping, Sequence
 from application.usecases import InferenceRequest, InferenceUseCase
 from domain import Signal, ThetaParams
 from domain.models.signal import SignalLeg
+from application.observability import metrics_recorder, telemetry_span
 from infrastructure.messaging import (
     OpsFlagRepository,
     RedisMessagingConfig,
@@ -114,34 +115,41 @@ class InferenceWorker:
             LOGGER.warning("Global halt active. Skipping inference for %s", request.partition_ids)
             return
 
-        start = self._clock()
-        response = self._inference_usecase.execute(request)
-        duration_ms = (self._clock() - start) * 1000.0
+        with telemetry_span(
+            "inference_worker.handle_request",
+            {"worker_id": self._config.worker_id, "partitions": ",".join(request.partition_ids)},
+        ):
+            start = self._clock()
+            response = self._inference_usecase.execute(request)
+            duration_ms = (self._clock() - start) * 1000.0
 
-        LOGGER.info(
-            "Inference completed. partitions=%s signals=%d duration_ms=%.2f",
-            ",".join(request.partition_ids),
-            len(response.signals),
-            duration_ms,
-        )
+            LOGGER.info(
+                "Inference completed. partitions=%s signals=%d duration_ms=%.2f",
+                ",".join(request.partition_ids),
+                len(response.signals),
+                duration_ms,
+            )
 
-        diagnostics: dict[str, object] = dict(response.diagnostics)
-        diagnostics.update(
-            {
-                "inference_duration_ms": f"{duration_ms:.2f}",
-                "worker_id": self._config.worker_id,
+            metrics_recorder.observe_inference_latency(self._config.worker_id, duration_ms)
+            metrics_recorder.increment_signals_published(self._config.worker_id, len(response.signals))
+
+            diagnostics: dict[str, object] = dict(response.diagnostics)
+            diagnostics.update(
+                {
+                    "inference_duration_ms": f"{duration_ms:.2f}",
+                    "worker_id": self._config.worker_id,
+                }
+            )
+
+            payload_dict = {
+                "signals": [_serialize_signal(signal) for signal in response.signals],
+                "metadata": request.metadata,
+                "diagnostics": diagnostics,
             }
-        )
-
-        payload_dict = {
-            "signals": [_serialize_signal(signal) for signal in response.signals],
-            "metadata": request.metadata,
-            "diagnostics": diagnostics,
-        }
-        self._signal_publisher.publish(
-            self._messaging_config.inference_signal_channel,
-            json.dumps(payload_dict),
-        )
+            self._signal_publisher.publish(
+                self._messaging_config.inference_signal_channel,
+                json.dumps(payload_dict),
+            )
 
 
 def _deserialize_theta_params(data: Mapping[str, object]) -> ThetaParams:

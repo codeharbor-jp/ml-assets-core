@@ -65,7 +65,7 @@
 - model_registry: model_version, metrics, theta1/2, artifact_path, status
 - バージョニング: `version = yyyyMMdd_HHmm + short_sha` を採用。最低 5 バージョン保持（`retrain_policy` は 10 推奨）、適用履歴は `audit.config_changes` に保存する。
 - model_registry スキーマ: PostgreSQL `core.model_registry` テーブル（列: `model_version`, `status`, `created_at`, `created_by`, `dataset_index_path`, `feature_schema_path`, `model_ai1_path`, `model_ai2_path`, `params_yaml_path`, `metrics_json`, `theta1`, `theta2`, `code_hash`, `data_hash`, `seed`, `notes`）。ステータスは `draft|candidate|approved|rejected|deployed|rolled_back` とし、採否の理由を `notes` に必須記録する。
-- アーティファクト保管: モデル・特徴量・θパラメータは `models_root/{model_version}/` に格納し、`checksums.json` に SHA256 を記録する。model_registry には格納先パスを保存し、`models_root` は設定で一元管理する。
+- アーティファクト保管: モデル・特徴量・θパラメータは `models_root/{model_version}/` に格納し、`checksums.json` に SHA256 を記録する。model_registry には格納先パスを保存し、`models_root` は設定で一元管理する。監査ログは `worm_root/<record_type>/<YYYY>/<YYYYMM>/` に WORM 形式で保管し、DR 用スナップショットは `backups_root` に退避する。
 - データ・コードハッシュ: 学習ジョブは使用データ範囲（timeframe, symbol, YYYY-MM）の MD5/SHA256 `data_hash` と Git commit `code_hash` を取得し、model_registry とバックテスト出力に必須保存する。
 - メトリクス保存: 学習完了時に `metrics.json`（CV・OOS 指標, calibration metrics, feature importance）を保存し、Analytics API へ連携する。欠測時は採用判定を行わず `retrain_status=blocked` とする。
 
@@ -94,6 +94,7 @@ theta_search_range: { value: { theta1: [0.60,0.85], theta2: [0.20,0.45] } }
 - データベース設定: `database.postgres` に `dsn`, `pool.{min_size,max_size,timeout_seconds}`, `statement_timeout_ms`, `search_path`, `schemas.{core,audit}` を定義し、各環境の `envs/<env>/database.yaml` で `dsn` を必ず上書きする。コード側でフォールバック値を持たず、DSN 未設定の場合は起動を失敗させる。
 - Config API 設定: `config_api` に `base_url`, `api_token`, `timeout_seconds`, `retries`, `verify_ssl` を定義し、`base_url` は `envs/<env>/config_api.yaml` で必ず上書きする。API トークンは Vault 等で管理し、YAML でのダミー値は開発用途に限定する。
 - 観測設定: `observability_policy.yaml` を参照し、Prometheus エンドポイント（`metrics.port`）と通知ブロック（`notifications.slack.block_ref` 等）を統一管理する。data-assets-pipeline のメトリクス公開（`data_watermark_lag_seconds`, `data_bars_written_total`）と連携し、ml-assets-core 側のヘルスチェックでも活用する。
+- `metrics.yaml` で `provider: prometheus` を指定し、`host`/`port`、`histogram_buckets`、`default_labels`、`otel` エクスポータ設定（`endpoint`, `timeout_seconds`, `service_name` 等）を管理する。`inference_latency_ms`, `feature_build_duration_seconds`, `core_retrain_duration_seconds`, `core_backtest_duration_seconds`, `core_theta_trials` などのメトリクスを `/metrics` で公開し、OTLP でトレースを収集する。
 
 ### 設定管理・ガバナンス
 - ワークフロー: UI → Git → PR → 承認 → 適用 → 監査（`draft → pr_created → approved → merged → applied`）。高リスク変更は approver 2 名を要求。
@@ -113,9 +114,9 @@ theta_search_range: { value: { theta1: [0.60,0.85], theta2: [0.20,0.45] } }
 ### Analytics・可観測性
 - KPI: モデル（AUC, Brier, PR-AUC, Calibration-ECE）、収益/リスク（年率, Sharpe, MaxDD, trades/yr, E/trade）、リスク運用（やらない勇気発動率, θ1/θ2 通過率, risk_flag precision/recall）、データ品質、運用 SLO を集計する。
 - API/ダッシュボード: FastAPI で `GET /metrics/model|trading|data_quality|risk`, `POST /reports/generate` 等を提供し、Next.js ダッシュボード（SSR+SWR）で 10〜60 秒間隔の自動更新を実施。Redis `analytics_cache` に短期 TTL キャッシュを置く。
-- 通知: 重大イベントは PagerDuty + Slack `#risk-alerts`、警告は Slack `#ml-ops`、情報は `#analytics-info`。テンプレートは `slack_policy.yaml` を参照。
+- 通知: 重大イベントは PagerDuty + Slack `#risk-alerts`、警告は Slack `#ml-ops`、情報は `#analytics-info`。テンプレートは `slack_policy.yaml`・`notifications.yaml` の `pagerduty`/`slack` セクションで管理し、ルーティングキーや severity を設定する。
 - モニタリング: Prometheus メトリクス（例 `inference_latency_ms`, `signals_per_min`, `data_pipeline_lag_seconds`, `bt_run_duration`, `dq_fail_total`, `data_watermark_lag_seconds`, `data_bars_written_total`）を定義し、トレースでは ingest_run_id を親に紐付ける。ml-assets-core は data-assets-pipeline のメトリクスを参照し、データ鮮度遅延時に推論を抑止する。
-- 再学習メトリクス: Prefect タスクに合わせて `core_retrain_duration_seconds`, `core_backtest_duration_seconds`, `core_theta_trials_total`, `core_theta_best_score` を Prometheus に出力し、Analytics で可視化する。
+- 再学習メトリクス: Prefect タスクに合わせて `core_retrain_duration_seconds`, `core_backtest_duration_seconds`, `core_theta_trials`, `core_theta_best_score` を Prometheus に出力し、Analytics で可視化する。
 - エラー命名規約: `{DOMAIN}_{CATEGORY}_{CODE}`（例: `DATA_API_TIMEOUT`, `CORE_INFER_LATENCY`, `BT_STRESS_FAIL`）を採用し、`severity` と構造化ペイロード（event_id, occurred_at, details）を必須とする。
 
 ### 運用 Runbook・Ops API
@@ -124,6 +125,7 @@ theta_search_range: { value: { theta1: [0.60,0.85], theta2: [0.20,0.45] } }
 - 承認フロー: 停止は運用責任者の承認、再開はリスク管理者と運用責任者のダブルチェック（`resume_policy`）。ハルト解除はカナリア再開（20%）→ KPI 監視後に全体適用。
 - ロールバック: θ・モデル・設定の各バージョンに対し `/ops/rollback` を提供。Sharpe -20% または MaxDD +3% 超で即時実行し、監査ログと Slack 通知を必須化。
 - 監査: すべての `/ops/*` 実行は `audit.analytics_actions` に記録し、incident ログに時刻・実施者・理由・証跡を保存する。
+- Runbook: `docs/runbook/model_release_runbook.md` にモデル配布手順・Prefect/インフラ更新・WORM 監査処理・DR スクリプトを記載し、リリースごとにチェックリストとして参照する。
 
 ### テスト
 - 単体（前処理/特徴/推論）、モデル（閾値未達で失敗）、回帰（旧新 BT 比較）、統合（AI1/AI2/統合判定整合）、負荷（10 ペア×1 分バー <200ms）、E2E（データ取得→推論→Redis 配信→Analytics 集計）を網羅する。
@@ -141,7 +143,7 @@ theta_search_range: { value: { theta1: [0.60,0.85], theta2: [0.20,0.45] } }
 - ルート直下
   - `src/`: 本体コード。アーキテクチャ原則（Domain/Application/Infrastructure/Interfaces）に沿って分割する。
   - `configs/`: 設定 YAML 群（`core_policy.yaml` 等）。`base/` を正とし、`envs/{dev,stg,prod}` は差分のみ記載。
-  - `deployments/`: Prefect デプロイ登録やインフラ IaC。`prefect/{dev,stg,prod}` に各環境の deployment 定義を配置。
+  - `deployments/`: Prefect/Redis/PostgreSQL を管理する Terraform テンプレと、Prefect Worker 用 Helm チャートを格納。`terraform/envs/<env>.tfvars` で環境差分を管理し、Plan → Apply をレビュー必須とする。
   - `notebooks/`: 実験用 Jupyter。成果は `/reports` や `/docs` に昇格し、ノートブック単体を本番根拠にしない。
   - `reports/`: 再学習やバックテスト結果のレポート（PDF/CSV）。`model_version` 単位で保存。
   - `scripts/`: 運用スクリプト（バックフィル、手動再学習、ローカル検証）。本番実行は Prefect API を介する。

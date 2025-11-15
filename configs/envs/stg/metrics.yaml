@@ -1,5 +1,11 @@
 metrics:
-  provider: noop
+  provider: prometheus
   options:
-    exporter_endpoint: null
+    host: "0.0.0.0"
+    port: 9100
+    default_labels:
+      environment: "stg"
+    otel:
+      enabled: true
+      endpoint: "otel-collector.stg.svc.cluster.local:4317"
 

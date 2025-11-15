@@ -20,7 +20,7 @@ class LabelingInput:
     """
 
     partition: DatasetPartition
-    features: Sequence[FeatureVector]
+    features: Sequence[Mapping[str, object]]
     metadata: Mapping[str, str] = field(default_factory=dict)
 
 

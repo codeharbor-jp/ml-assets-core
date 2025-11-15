@@ -1,4 +1,6 @@
 notifications:
   slack:
     webhook_url: http://localhost:8081/slack-webhook
+  pagerduty:
+    enabled: false
 

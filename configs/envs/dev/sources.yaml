@@ -1,0 +1,11 @@
+sources:
+  providers:
+    - name: "twelvedata"
+      settings:
+        base_url: "https://sandbox.twelvedata.com"
+        api_key: "$TWELVEDATA_API_KEY_DEV"
+    - name: "secondary_rest"
+      settings:
+        base_url: "http://localhost:8081/market-data"
+        auth_token: "$SECONDARY_API_TOKEN_DEV"
+

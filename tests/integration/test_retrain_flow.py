@@ -1,3 +1,5 @@
+# ruff: noqa: E402
+
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Mapping, Sequence
@@ -5,29 +7,31 @@ from typing import Mapping, Sequence
 import sys
 import types
 
-if "prefect" not in sys.modules:
-    prefect_stub = types.ModuleType("prefect")
+prefect_stub = types.ModuleType("prefect")
 
-    def _flow(name: str | None = None):
-        def decorator(fn):
-            def wrapped(*args, **kwargs):
-                return fn(*args, **kwargs)
 
-            wrapped.__name__ = fn.__name__
-            return wrapped
+def _flow(name: str | None = None):
+    def decorator(fn):
+        def wrapped(*args, **kwargs):
+            return fn(*args, **kwargs)
 
-        return decorator
+        wrapped.__name__ = fn.__name__
+        return wrapped
 
-    def _get_run_logger():
-        class _Logger:
-            def info(self, *args, **kwargs) -> None:
-                return None
+    return decorator
 
-        return _Logger()
 
-    prefect_stub.flow = _flow
-    prefect_stub.get_run_logger = _get_run_logger
-    sys.modules["prefect"] = prefect_stub
+def _get_run_logger():
+    class _Logger:
+        def info(self, *args, **kwargs) -> None:
+            return None
+
+    return _Logger()
+
+
+prefect_stub.flow = _flow
+prefect_stub.get_run_logger = _get_run_logger
+sys.modules["prefect"] = prefect_stub
 
 from application.flows.core_backtest import core_backtest_flow
 from application.flows.core_retrain import CoreRetrainResult, core_retrain_flow

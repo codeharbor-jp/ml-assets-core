@@ -1,0 +1,8 @@
+storage:
+  canonical_root: "/mnt/prod/ml-assets-core/canonical"
+  features_root: "/mnt/prod/ml-assets-core/features"
+  snapshots_root: "/mnt/prod/ml-assets-core/snapshots"
+  models_root: "/mnt/prod/ml-assets-core/models"
+  worm_root: "/mnt/prod/ml-assets-core/worm"
+  backups_root: "/mnt/prod/ml-assets-core/backups"
+

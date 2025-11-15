@@ -44,6 +44,39 @@
 
 ---
 
+## ml-assets-core 実装TODOロードマップ v3（本番強化フェーズ）
+
+### フェーズ概要
+- v2 で構築したアプリケーション基盤をベースに、要件書に残る未実装領域（実データ連携、観測性、IaC、運用体制）を仕上げ、本番稼働に耐える状態へ仕上げる。
+- 実データ接続 → 観測・通知 → IaC/配布 → Analytics → QA/E2E の順に進め、各ステップでテスト・ドキュメント・運用手順をセットで整備する。
+
+### 1. データ連携とストレージ拡張
+- [x] TwelveData / Secondary プロバイダ実装と `sources.yaml` 優先度・フェイルオーバロジックの組み込み。
+- [x] data-assets-pipeline との API/ストレージ連携を実装し、`storage.yaml`/`ml_core_storage.yaml` の実環境パスと権限を確定。
+- [x] `feature_schema.json`・`preprocess_report.json` 出力を本実装し、推論側へのスキーマ連携を完了する。
+
+### 2. 観測性と通知インフラ
+- [x] Prometheus エクスポータのメトリクス定義（inference_latency, core_retrain_duration など）を要件書に沿って実装。
+- [x] OpenTelemetry トレース初期化と Prefect/task 連携を構築し、`ingest_run_id` を起点とした分散トレースを可視化。
+- [x] Slack/PagerDuty 通知テンプレートを整備し、重大度別ルーティングを Prefect フローと Ops サービスから利用できるよう統合。
+
+### 3. IaC・配布・運用整備
+- [ ] Prefect Work Pool / Redis / PostgreSQL を構築する Terraform/Helm テンプレートを `deployments/` に作成し、環境変数・シークレット管理をドキュメント化。
+- [ ] モデル配布（SFTP/共有ストレージ）と `models_root` 配下のチェックサム管理を実装し、配布 Runbook を更新。
+- [ ] 監査ログ WORM 保存と DR/バックアップ手順の IaC 連携、Ops Runbook（halt/flatten/resume）の詳細化を実施。
+
+### 4. Analytics / ダッシュボード
+- [ ] FastAPI `GET /metrics/*` / `POST /reports/*` を実装し、Analytics API と Redis キャッシュを整備。
+- [ ] Next.js ダッシュボード（SSR+SWR）を仮実装し、主要 KPI（Sharpe, MaxDD, DQ 指標, Ops 状態）を可視化。
+- [ ] Prefect/再学習メトリクスをダッシュボードに取り込み、Slack 通知と連動するアラート設定を文書化。
+
+### 5. データ品質・E2E 強化
+- [ ] Great Expectations（または同等ツール）でデータ品質テストを自動化し、CI と Prefect フローに統合。
+- [ ] 実データ取得→学習→バックテスト→θ更新→推論→Redis 配信→Analytics 集計までの E2E シナリオテストを構築。
+- [ ] リリースゲートスクリプトに DQ/E2E チェックを追加し、ローンチ可否判断の自動化を行う。
+
+---
+
 ## ml-assets-core 実装TODOロードマップ v1（スケルトン整備）
 
 ### 全体方針

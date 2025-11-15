@@ -4,12 +4,15 @@
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from statistics import mean
 from typing import Callable, Iterable, Mapping, Protocol, Sequence
 
 from domain import CalibrationMetrics, DatasetPartition, ModelArtifact, ThetaParams
+
+from application.observability import metrics_recorder, telemetry_span
 
 FeatureVector = Mapping[str, float]
 
@@ -165,6 +168,23 @@ class Trainer(TrainerService):
         self._clock = clock or (lambda: datetime.now(timezone.utc))
 
     def run(self, request: TrainingRequest) -> TrainingResult:
+        with telemetry_span(
+            "trainer.run",
+            {
+                "partition.symbol": request.partition.symbol,
+                "partition.timeframe": request.partition.timeframe,
+            },
+        ):
+            start = time.perf_counter()
+
+            result = self._run_training(request)
+            model_version = result.artifact.artifact.model_version
+            duration = time.perf_counter() - start
+            metrics_recorder.observe_training_duration(model_version, duration)
+            metrics_recorder.increment_retrain_success("success")
+            return result
+
+    def _run_training(self, request: TrainingRequest) -> TrainingResult:
         cv_ai1 = []
         cv_ai2 = []
         splits = list(

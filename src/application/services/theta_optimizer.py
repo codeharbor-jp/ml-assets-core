@@ -9,6 +9,8 @@ from typing import Mapping, Protocol, Sequence
 
 from domain import ThetaParams, ThetaRange
 
+from application.observability import metrics_recorder, telemetry_span
+
 
 class GridSearchStrategy(Protocol):
     """
@@ -118,9 +120,19 @@ class ThetaOptimizer(ThetaOptimizationService):
         self._scorer = scorer
 
     def optimize(self, request: ThetaOptimizationRequest) -> ThetaOptimizationResult:
+        with telemetry_span(
+            "theta_optimizer.optimize",
+            {"range.theta1_min": request.range.theta1_min, "range.theta1_max": request.range.theta1_max},
+        ):
+            return self._optimize(request)
+
+    def _optimize(self, request: ThetaOptimizationRequest) -> ThetaOptimizationResult:
         plan = request.plan
         grid_candidates = list(self._grid_strategy.generate_candidates(request.range, plan.grid_steps))
         feasible = [c for c in grid_candidates if self._constraint_evaluator.validate(c, plan.constraints)]
+
+        metrics_recorder.increment_theta_trials("grid", len(grid_candidates))
+        metrics_recorder.increment_theta_trials("feasible", len(feasible))
 
         if not feasible:
             feasible = [request.initial_params]
@@ -136,6 +148,7 @@ class ThetaOptimizer(ThetaOptimizationService):
             base_candidates=tuple(feasible),
             constraints=plan.constraints,
         )
+        metrics_recorder.increment_theta_trials("optuna", plan.optuna_trials)
 
         if not self._constraint_evaluator.validate(optuna_candidate, plan.constraints):
             selected_candidate = best_grid_candidate

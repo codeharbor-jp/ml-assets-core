@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "prefect-worker.fullname" . }}
+  labels:
+    {{- include "prefect-worker.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "prefect-worker.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        {{- include "prefect-worker.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "prefect-worker.fullname" . }}
+      containers:
+        - name: prefect-worker
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - prefect
+            - worker
+            - start
+            - --pool
+            - {{ .Values.prefect.workPool | quote }}
+          env:
+            - name: PREFECT_API_URL
+              value: {{ .Values.prefect.apiUrl | quote }}
+            - name: PREFECT_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.prefect.apiKeySecretRef.name }}
+                  key: {{ .Values.prefect.apiKeySecretRef.key }}
+          {{- if .Values.extraEnv }}
+          {{- toYaml .Values.extraEnv | nindent 10 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+          {{- toYaml .Values.volumeMounts | nindent 12 }}
+      volumes:
+      {{- toYaml .Values.volumes | nindent 8 }}
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.tolerations | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.affinity | nindent 8 }}
+
